@@ -24,3 +24,49 @@ parser grammar Lang24Parser;
 options{
     tokenVocab=Lang24Lexer;
 }
+
+
+source: definitions;
+
+definitions: 	 ( type_definition | variable_definition | function_definition )+ ;
+
+type_definition: IDENTIFIER '=' type ;
+variable_definition: IDENTIFIER ':' type ;
+function_definition: IDENTIFIER '(' (parameters)? ')' ':' type ('=' statement ('{' definitions '}')?)? ;
+
+//parameters: ('^')? IDENTIFER ':' type ( ',' ('^')? IDENTIFIER ':' type)* ;
+parameters: ('^')? IDENTIFIER ':' type ( ',' ('^')? IDENTIFIER ':' type )*;
+
+statement: 	expression ';'
+		| expression '=' expression ';' 
+		| 'if' expression 'then' statement ('else' statement)?
+		| 'while' expression ':' statement
+		| 'return' expression ';'
+		| '{' (statement)+ '}' ;
+
+type: 	VOID | BOOL | CHAR | INT
+	| '[' INT_CONST ']' IDENTIFIER 
+	| '^' type
+	| '(' components ')'
+	| '{' components '}'
+	| IDENTIFIER ;
+
+components:	IDENTIFIER ':' type (',' IDENTIFIER ':' type)* ;
+
+expression: 	NONE | TRUE | FALSE | INT_CONST | CHAR_LIT | STRING_LIT | NIL
+		| IDENTIFIER ( '(' (expression (',' expression)* )? ')' )?
+		| expression '[' expression ']' | expression '^' | expression '.' IDENTIFIER
+		| 'not' expression | '+' expression | '-' expression | '^' expression | '<' type '>' expression
+		| expression ( '*' | '/' | '%' ) expression 
+		| expression ( '+' | '-' ) expression 
+		| expression ( '==' | '!=' | '<' | '>' | '<=' | '>=' ) expression  
+		| expression 'and' expression | expression 'or' expression 
+		| 'sizeof' '(' expression ')'
+		| '(' expression ')' ;
+
+
+
+
+
+
+

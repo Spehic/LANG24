@@ -17,6 +17,7 @@ AND:		'and';
 BOOL:		'bool';
 CHAR:		'char';
 ELSE:		'else';
+FALSE:		'false';
 IF:		'if';
 INT:		'int';
 NIL:		'nil';
@@ -26,6 +27,7 @@ OR:		'or';
 SIZEOF:		'sizeof';
 THEN:		'then';
 RETURN:		'return';
+TRUE:		'true';
 VOID:		'void';
 WHILE:		'while';
 
@@ -56,7 +58,7 @@ ASSIGN:		'=';
 
 
 IDENTIFIER: 	[a-zA-Z_][a-zA-Z0-9_]*;
-INT_LIT:	[0-9]+;
+INT_CONST:	[0-9]+;
 CHAR_LIT: '\'' CHARACTER '\'';
 STRING_LIT: '"' SCHARACTER* '"';
 fragment CHARACTER: ([\u0020-\u005B] | [\u005D-\u005F] | [\u0061-\u007E] | '\\n' | '\\\\' | '\\\'' | HEX_CODE);
@@ -68,4 +70,6 @@ WHITESPACE: (' ' | '\n' | '\r') -> skip;
 TAB:	'\t' {setCharPositionInLine((getCharPositionInLine() + 7)/8 * 8);skip();};
 COMMENT: '#' ~[\r\n]* '\r'? '\n' -> skip;
 
+ERR: '\'' '\''{ if(true) throw new Report.Error(new Location(_tokenStartLine, _tokenStartCharPositionInLine, getLine(), getCharPositionInLine()), "Lexer: Empty character literal not allowed");} ;
+GERR: . { if(true) throw new Report.Error(new Location(_tokenStartLine, _tokenStartCharPositionInLine, getLine(), getCharPositionInLine()), "Lexer: Unexpected character");} ;
 
