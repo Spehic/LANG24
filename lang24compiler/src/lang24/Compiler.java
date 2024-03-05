@@ -6,6 +6,7 @@ import java.nio.file.attribute.*;
 import java.util.*;
 import lang24.common.report.*;
 import lang24.phase.lexan.*;
+import lang24.phase.synan.*;
 
 /**
  * The LANG'24 compiler.
@@ -21,7 +22,7 @@ public class Compiler {
 
 	/** All valid phases name of the compiler. */
 	private static final Vector<String> phaseNames = new Vector<String>(
-			Arrays.asList("none", "all", "lexan", "synan", "abstr", "seman"));
+			Arrays.asList("none", "all", "lexan", "synan"));
 
 	/** Names of command line options. */
 	private static final HashSet<String> cmdLineOptNames = new HashSet<String>(
@@ -139,6 +140,15 @@ public class Compiler {
 					break;
 				}
 
+				// Syntax analysis.
+				try (LexAn lexan = new LexAn(); SynAn synan = new SynAn(lexan)) {
+					SynAn.tree = synan.parser.source();
+					synan.log(SynAn.tree);
+				}
+				if (cmdLineOptValues.get("--target-phase").equals("synan"))
+					break;
+
+				// if (cmdLineOptValues.get("--target-phase").equals("all"))
 				break;
 			}
 
