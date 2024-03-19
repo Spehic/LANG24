@@ -26,8 +26,8 @@ parser grammar Lang24Parser;
 	
 	private AstBinExpr.Oper getBinOp(String str){
 		return switch(str){
-			case "and" -> AstBinExpr.Oper.OR;
-			case "or" -> AstBinExpr.Oper.AND;
+			case "and" -> AstBinExpr.Oper.AND;
+			case "or" -> AstBinExpr.Oper.OR;
 			case "==" -> AstBinExpr.Oper.EQU;
 			case "!=" -> AstBinExpr.Oper.NEQ;
 			case "<" -> AstBinExpr.Oper.LTH;
@@ -49,16 +49,19 @@ options{
 }
 
 
-source returns [AstNodes ast]: d=definitions {$ast = new AstNodes($d.ast);} ;
+source returns [AstNodes ast]: d=definitions {$ast = $d.ast;} ;
 
-definitions returns [ArrayList<AstDefn> ast]
+definitions returns [AstNodes<AstDefn> ast]
 @init{
-	$ast = new ArrayList<AstDefn>();
+	ArrayList<AstDefn> arr = new ArrayList<AstDefn>();
+}
+@after{
+	$ast = new AstNodes<AstDefn>(arr);
 }
 		:
-		( t=type_definition {$ast.add($t.ast);}
-		| v=variable_definition {$ast.add($v.ast);}
-		| f=function_definition {$ast.add($f.ast);}
+		( t=type_definition {arr.add($t.ast);}
+		| v=variable_definition {arr.add($v.ast);}
+		| f=function_definition {arr.add($f.ast);}
 		)+ ;
 
 type_definition returns [AstTypDefn ast] 
@@ -68,18 +71,66 @@ variable_definition returns [AstVarDefn ast]
 		: i=IDENTIFIER ':' t=type { $ast = new AstVarDefn( loc($i, $t.l) , $i.text, $t.ast);};
 
 function_definition returns [AstFunDefn ast, Location l]
-		: i=IDENTIFIER '(' (parameters)? ')' ':' type ('=' s=statement ('{' d=definitions '}')?)? 
-		{$l=loc($i);};
+		: i=IDENTIFIER '(' (p=parameters)? ')' ':' t=type ('=' s=statement ('{' d=definitions '}')?)? 
+		{ 	$l=loc($i);
+			AstNodes<AstFunDefn.AstParDefn> params = null;
+			AstNodes<AstDefn> defns = null;
+			if($p.ctx != null) params = $p.pars;
+			if($d.ctx != null) defns = $d.ast;
+			$ast = new AstFunDefn($l,$i.text,params,$t.ast,$s.ast,defns);	
+		};
 
-parameters 
+parameters returns [AstNodes<AstFunDefn.AstParDefn> pars]
 @init{
-
+	ArrayList<AstFunDefn.AstParDefn> arr = new ArrayList<>();
+	Location l;
+	boolean flag;
 }
-		:('^')? ia=IDENTIFIER ':' ta=type ( ',' ('^')? IDENTIFIER ':' type )*; 
+@after{
+	if(flag) $pars = null;
+	else $pars = new AstNodes(arr);
+}
+		:{flag = true;}
+		ta=tick ia=IDENTIFIER ':' t=type ( o=other_params {  if($o.ctx != null) arr.addAll($o.othrs);} )*
+		{
+		flag = false;
+		if($ta.b){
+			l = loc($ta.l, $t.l);		
+			arr.add(new AstFunDefn.AstRefParDefn(l, $ia.text, $t.ast));
+		} else{
+			l = loc($ia, $t.l);		
+			arr.add(new AstFunDefn.AstValParDefn(l, $ia.text, $t.ast));
+		}
+		if($o.ctx != null) arr.addAll($o.othrs);
+		}; 
+
+
+other_params returns [ArrayList<AstFunDefn.AstParDefn> othrs]
+@init{
+	ArrayList<AstFunDefn.AstParDefn> arr = new ArrayList<>();
+	Location l;
+}
+@after{
+	$othrs = arr;
+}
+		: ',' tb=tick i=IDENTIFIER ':' t=type {
+			if($tb.b){
+				l = loc($tb.l, $t.l);		
+				arr.add(new AstFunDefn.AstRefParDefn(l, $i.text, $t.ast));
+			} else{
+				l = loc($i, $t.l);		
+				arr.add(new AstFunDefn.AstValParDefn(l, $i.text, $t.ast));
+			}
+		}
+		;
+
+
+tick returns [boolean b, Location l]
+	: {$b = false;}
+	| a='^' {$b = true; $l = loc($a);};
 
 
 statement returns [AstStmt ast, Location l]
-locals[ ArrayList<AstStmt> arr]
 @init{
 	ArrayList<AstStmt> arr = new ArrayList<AstStmt>();
 }
@@ -89,7 +140,7 @@ locals[ ArrayList<AstStmt> arr]
 		| i='if' e=expression 'then' s=statement ('else' ss=statement)? {$l = loc($i); $ast = new AstIfStmt($l, $e.ast, $s.ast, $ss.ast);}
 		| w='while' e=expression ':' s=statement { $l = loc($w, $e.l); $ast = new AstWhileStmt($l, $e.ast, $s.ast);}
 		| r='return' e=expression k=';' { $l = loc($r, $e.l); $ast = new AstReturnStmt($l, $e.ast);}
-		| ll='{' (s=statement)+ r='}' {$l = loc($ll, $r); $arr.add($s.ast); $ast = new AstBlockStmt($l, $arr);} 
+		| ll='{' (s=statement {$l = loc($ll, $r);arr.add($s.ast); $ast = new AstBlockStmt($l, arr);})+ r='}'  
 		;
 
 type returns [AstType ast, Location l]
@@ -98,13 +149,31 @@ type returns [AstType ast, Location l]
 	| c=CHAR {$ast = new AstAtomType(loc($c), AstAtomType.Type.CHAR); $l = loc($c);} 
 	| i=INT {$ast = new AstAtomType(loc($i), AstAtomType.Type.INT); $l = loc($i);} 
 	| s='[' i=INT_CONST ']' t=type {$l = loc($s, $t.l); $ast = new AstArrType($l, $t.ast, new AstAtomExpr(loc($i), AstAtomExpr.Type.INT, $i.text));} 
-	| '^' type
-	| '(' components ')'
-	| '{' components '}'
+	| a='^' t=type {$l = loc($a, $t.l); $ast = new AstPtrType($l, $t.ast);}
+	| lb='(' cm=components r=')' {$l = loc($lb, $r); $ast = new AstUniType($l, $cm.ast);}
+	| lb='{' cm=components r='}' {$l = loc($lb, $r); $ast = new AstStrType($l, $cm.ast);}
 	| i=IDENTIFIER {$l = loc($i); $ast = new AstNameType($l, $i.text);}
 	;
 
-components:	IDENTIFIER ':' type (',' IDENTIFIER ':' type)* ;
+components returns [AstNodes<AstRecType.AstCmpDefn> ast]
+@init{
+	ArrayList<AstRecType.AstCmpDefn> arr = new ArrayList<>();
+	Location l;
+}
+@after{
+	$ast = new AstNodes<AstRecType.AstCmpDefn>(arr);
+}
+
+	: i=IDENTIFIER ':' t=type ( o=other_components { if($o.ctx != null) arr.add($o.ast);})*{
+			{l = loc($i, $t.l); arr.add(new AstRecType.AstCmpDefn(l, $i.text, $t.ast)); }
+	};
+
+other_components returns [AstRecType.AstCmpDefn ast]
+@init{
+	Location l;
+}
+	: ll=',' i=IDENTIFIER ':' t=type {l = loc($ll, $t.l); $ast = new AstRecType.AstCmpDefn(l, $i.text, $t.ast);};
+
 
 expression returns[AstExpr ast, Location l]
 		: n=NONE {$ast = new AstAtomExpr(loc($n), AstAtomExpr.Type.VOID, $n.text); $l = loc($n);} 
@@ -114,8 +183,7 @@ expression returns[AstExpr ast, Location l]
 		| c=CHAR_LIT {$ast = new AstAtomExpr(loc($c), AstAtomExpr.Type.CHAR, $c.text); $l = loc($c);}
 		| s=STRING_LIT {$ast = new AstAtomExpr(loc($s), AstAtomExpr.Type.STR, $s.text); $l = loc($s);} 
 		| n=NIL {$ast = new AstAtomExpr(loc($n), AstAtomExpr.Type.PTR, $n.text); $l = loc($n);}
-		| i=IDENTIFIER ( '(' (expression (',' expression)* )? ')' )? 
-		| e=expression '[' INT_CONST b=']' 
+		| e=expression '[' eb=expression b=']' {$l = loc($e.l, $b); $ast = new AstArrExpr($l, $e.ast, $eb.ast);}
 		| e=expression b='^' { $ast = new AstSfxExpr(loc($e.l, $b), AstSfxExpr.Oper.PTR, $e.ast);} 
 		| e=expression '.' i=IDENTIFIER {$l=loc($e.l, $i); $ast = new AstCmpExpr($l, $e.ast, $i.text); }
 		| ae='not' e=expression { $l = loc($ae, $e.l); $ast = new AstPfxExpr($l, AstPfxExpr.Oper.NOT, $e.ast);}
@@ -123,16 +191,34 @@ expression returns[AstExpr ast, Location l]
 		| ab='-' e=expression { $l = loc($ab, $e.l); $ast = new AstPfxExpr($l, AstPfxExpr.Oper.SUB, $e.ast);}
 		| ac='^' e=expression { $l = loc($ac, $e.l); $ast = new AstPfxExpr($l, AstPfxExpr.Oper.PTR, $e.ast);}
 		| ad='<' tb=type '>' e=expression { $l = loc($ad, $e.l); $ast = new AstCastExpr($l, $tb.ast, $e.ast); }
-		| as=expression op=( '*' | '/' | '%' ) ba=expression { $l =loc($as.l, $ba.l); new AstBinExpr($l, getBinOp($op.text), $as.ast, $ba.ast);} 
-		| as=expression ( '+' | '-' ) ba=expression { $l =loc($as.l, $ba.l); new AstBinExpr($l, getBinOp($op.text), $as.ast, $ba.ast);} 
-		| as=expression ( '==' | '!=' | '<' | '>' | '<=' | '>=' ) ba=expression { $l =loc($as.l, $ba.l); new AstBinExpr($l, getBinOp($op.text), $as.ast, $ba.ast);}
-		| as=expression 'and' ba=expression { $l = loc($as.l, $ba.l); new AstBinExpr($l, AstBinExpr.Oper.AND, $as.ast, $ba.ast);}
-		| as=expression 'or' ba=expression { $l =loc($as.l, $ba.l); new AstBinExpr($l, AstBinExpr.Oper.OR, $as.ast, $ba.ast);}
+		| as=expression op=( '*' | '/' | '%' ) ba=expression { $l =loc($as.l, $ba.l); $ast =new AstBinExpr($l, getBinOp($op.text), $as.ast, $ba.ast);} 
+		| as=expression op=( '+' | '-' ) ba=expression { $l =loc($as.l, $ba.l); $ast = new AstBinExpr($l, getBinOp($op.text), $as.ast, $ba.ast);} 
+		| as=expression op=( '==' | '!=' | '<' | '>' | '<=' | '>=' ) ba=expression { $l =loc($as.l, $ba.l); $ast =new AstBinExpr($l, getBinOp($op.text), $as.ast, $ba.ast);}
+		| as=expression 'and' ba=expression { $l = loc($as.l, $ba.l); $ast =new AstBinExpr($l, AstBinExpr.Oper.AND, $as.ast, $ba.ast);}
+		| as=expression 'or' ba=expression { $l =loc($as.l, $ba.l); $ast = new AstBinExpr($l, AstBinExpr.Oper.OR, $as.ast, $ba.ast);}
 		| s='sizeof' '(' ta=type r=')' {$l = loc($s, $r); $ast = new AstSizeofExpr($l, $ta.ast);}
 		| ls='(' e=expression r=')' {$l = loc($ls, $r); $ast = $e.ast;}  
+		| i=IDENTIFIER ( ll='(' ( fnc=fnc_call_expr )? rr=')' )?
+		{
+			if($ctx.ll == null) $ast = new AstNameExpr(loc($i), $i.text);
+			else{
+				AstNodes<AstExpr> tmp = null;
+				if($fnc.ctx != null) tmp = $fnc.ast;
+			 	$ast = new AstCallExpr(loc($i, $rr), $i.text, tmp);
+			}
+		} 
 		;
-
-
+ 
+ fnc_call_expr returns [AstNodes<AstExpr> ast]
+ @init{
+		ArrayList<AstExpr> arr = new ArrayList<AstExpr>();
+ }
+ @after{
+		$ast = new AstNodes(arr);
+ }
+ 	: ea=expression ( ',' eb=expression {if($eb.ctx != null) arr.add($eb.ast);} )*
+	{arr.add($ea.ast);} 
+	;
 
 
 

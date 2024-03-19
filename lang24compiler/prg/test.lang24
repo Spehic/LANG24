@@ -1,7 +1,35 @@
-ales = asd 
-ales: int
-ales: void
-ales: void
-ales: void
-ales: void
+int_test : int
+int_test2 : int
+flagg    : bool
+and_two : [46] int
+ptr_int_test : ^int
+
+dumb_addition(first : int, second : int) : int = {
+    sum_test = int_test + int_test2;
+    sum = first + second;
+    return sum;
+} { sum_test : int sum : int }
+
+main_function() : bool = {
+    int_test = 5;
+    ptr_int_test^ = 1;
+    int_test2 = 7;
+    ret_val = dumb_addition(int_test, int_test2);
+    idx = 0;
+    flagg = true;
+    while (idx < 46) : {
+        and_two[idx] = ret_val;
+        idx = idx + 1;
+    }
+    return flagg;
+} { ret_val : int idx : int }
+
+local_function_test() : int = {
+    int_test = 420;
+    int_test2 = 42;
+    ret_val = dumb_addition(int_test, int_test2);
+    ret_val = multiply_by_2(ret_val);
+    return ret_val;
+
+} { ret_val : int idx : int multiply_by_2(number : int) : int = return number * 2; }
 
