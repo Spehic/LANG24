@@ -133,7 +133,13 @@ public class AstNodes<Node extends AstNode> extends AstNode implements Iterable<
 
 	@Override
 	public <Result, Argument> Result accept(AstVisitor<Result, Argument> visitor, Argument arg) {
-		return visitor.visit(this, arg);
+		if (arg == null){ 
+			for(int i = 0; i < 4; i++) {
+				visitor.visit(this, (Argument) Integer.valueOf(i));
+			}
+			return visitor.visit(this, (Argument) Integer.valueOf(4));
+		}
+		else return visitor.visit(this, arg);
 	}
 
 }

@@ -526,7 +526,7 @@ public class Lang24Parser extends Parser {
 				{
 				setState(79);
 				((ParametersContext)_localctx).o = other_params();
-				  if(((ParametersContext)_localctx).o != null) arr.addAll(((ParametersContext)_localctx).o.othrs);
+				  if(((ParametersContext)_localctx).o != null) arr.add(((ParametersContext)_localctx).o.othrs);
 				}
 				}
 				setState(86);
@@ -542,7 +542,6 @@ public class Lang24Parser extends Parser {
 						l = loc(((ParametersContext)_localctx).ia, ((ParametersContext)_localctx).t.l);		
 						arr.add(new AstFunDefn.AstValParDefn(l, (((ParametersContext)_localctx).ia!=null?((ParametersContext)_localctx).ia.getText():null), ((ParametersContext)_localctx).t.ast));
 					}
-					if(((ParametersContext)_localctx).o != null) arr.addAll(((ParametersContext)_localctx).o.othrs);
 					
 			}
 			_ctx.stop = _input.LT(-1);
@@ -564,7 +563,7 @@ public class Lang24Parser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class Other_paramsContext extends ParserRuleContext {
-		public ArrayList<AstFunDefn.AstParDefn> othrs;
+		public AstFunDefn.AstParDefn othrs;
 		public TickContext tb;
 		public Token i;
 		public TypeContext t;
@@ -587,7 +586,6 @@ public class Lang24Parser extends Parser {
 		Other_paramsContext _localctx = new Other_paramsContext(_ctx, getState());
 		enterRule(_localctx, 12, RULE_other_params);
 
-			ArrayList<AstFunDefn.AstParDefn> arr = new ArrayList<>();
 			Location l;
 
 		try {
@@ -606,16 +604,15 @@ public class Lang24Parser extends Parser {
 
 						if(((Other_paramsContext)_localctx).tb.b){
 							l = loc(((Other_paramsContext)_localctx).tb.l, ((Other_paramsContext)_localctx).t.l);		
-							arr.add(new AstFunDefn.AstRefParDefn(l, (((Other_paramsContext)_localctx).i!=null?((Other_paramsContext)_localctx).i.getText():null), ((Other_paramsContext)_localctx).t.ast));
+							((Other_paramsContext)_localctx).othrs =  new AstFunDefn.AstRefParDefn(l, (((Other_paramsContext)_localctx).i!=null?((Other_paramsContext)_localctx).i.getText():null), ((Other_paramsContext)_localctx).t.ast);
 						} else{
 							l = loc(((Other_paramsContext)_localctx).i, ((Other_paramsContext)_localctx).t.l);		
-							arr.add(new AstFunDefn.AstValParDefn(l, (((Other_paramsContext)_localctx).i!=null?((Other_paramsContext)_localctx).i.getText():null), ((Other_paramsContext)_localctx).t.ast));
+							((Other_paramsContext)_localctx).othrs =  new AstFunDefn.AstValParDefn(l, (((Other_paramsContext)_localctx).i!=null?((Other_paramsContext)_localctx).i.getText():null), ((Other_paramsContext)_localctx).t.ast);
 						}
 					
 			}
 			_ctx.stop = _input.LT(-1);
 
-				((Other_paramsContext)_localctx).othrs =  arr;
 
 		}
 		catch (RecognitionException re) {

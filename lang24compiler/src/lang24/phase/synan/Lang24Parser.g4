@@ -91,7 +91,7 @@ parameters returns [AstNodes<AstFunDefn.AstParDefn> pars]
 	else $pars = new AstNodes(arr);
 }
 		:{flag = true;}
-		ta=tick ia=IDENTIFIER ':' t=type ( o=other_params {  if($o.ctx != null) arr.addAll($o.othrs);} )*
+		ta=tick ia=IDENTIFIER ':' t=type ( o=other_params {  if($o.ctx != null) arr.add($o.othrs);} )*
 		{
 		flag = false;
 		if($ta.b){
@@ -101,25 +101,22 @@ parameters returns [AstNodes<AstFunDefn.AstParDefn> pars]
 			l = loc($ia, $t.l);		
 			arr.add(new AstFunDefn.AstValParDefn(l, $ia.text, $t.ast));
 		}
-		if($o.ctx != null) arr.addAll($o.othrs);
 		}; 
 
 
-other_params returns [ArrayList<AstFunDefn.AstParDefn> othrs]
+other_params returns [AstFunDefn.AstParDefn othrs]
 @init{
-	ArrayList<AstFunDefn.AstParDefn> arr = new ArrayList<>();
 	Location l;
 }
 @after{
-	$othrs = arr;
 }
 		: ',' tb=tick i=IDENTIFIER ':' t=type {
 			if($tb.b){
 				l = loc($tb.l, $t.l);		
-				arr.add(new AstFunDefn.AstRefParDefn(l, $i.text, $t.ast));
+				$othrs = new AstFunDefn.AstRefParDefn(l, $i.text, $t.ast);
 			} else{
 				l = loc($i, $t.l);		
-				arr.add(new AstFunDefn.AstValParDefn(l, $i.text, $t.ast));
+				$othrs = new AstFunDefn.AstValParDefn(l, $i.text, $t.ast);
 			}
 		}
 		;

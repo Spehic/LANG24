@@ -1,35 +1,31 @@
-int_test : int
-int_test2 : int
-flagg    : bool
-and_two : [46] int
-ptr_int_test : ^int
-
-dumb_addition(first : int, second : int) : int = {
-    sum_test = int_test + int_test2;
-    sum = first + second;
-    return sum;
-} { sum_test : int sum : int }
-
-main_function() : bool = {
-    int_test = 5;
-    ptr_int_test^ = 1;
-    int_test2 = 7;
-    ret_val = dumb_addition(int_test, int_test2);
-    idx = 0;
-    flagg = true;
-    while (idx < 46) : {
-        and_two[idx] = ret_val;
-        idx = idx + 1;
-    }
-    return flagg;
-} { ret_val : int idx : int }
-
-local_function_test() : int = {
-    int_test = 420;
-    int_test2 = 42;
-    ret_val = dumb_addition(int_test, int_test2);
-    ret_val = multiply_by_2(ret_val);
-    return ret_val;
-
-} { ret_val : int idx : int multiply_by_2(number : int) : int = return number * 2; }
+func_name (par1 : nov_tip2, par2 : bool, par3 : nov_tip1) : ^nov_tip2 = 
+{
+	x1 = x1[0];
+	x2 = bla_bla_bla;
+	x6 = bla_bla_bla;
+	func_decl();
+	par2 = true;
+	par3 = false;
+}
+{
+	#x1 : [10]int
+	x2 : nov_tip1
+	x3 = {hey : bool}
+	x4 = {hey : bool, x6 : int}
+	x5 = {hey : bool, x6 : int, x7 : ^int}
+	x6 : nov_tip2
+	par3 : int
+	nov_tip1 = int
+	func_decl(): ^char = {
+		return "hello_inside";
+	}
+}
+nov_tip1 = [10]bool # type (nov_tip1) definition
+nov_tip2 = [20]bool # type (nov_tip2) definition
+bla_bla_bla : bool # variable (bla_bla_bla) definition
+x1 : bool
+x2 : int
+	func_decl(): ^char = {
+		return "hello_outside";
+	}
 
