@@ -71,13 +71,21 @@ variable_definition returns [AstVarDefn ast]
 		: i=IDENTIFIER ':' t=type { $ast = new AstVarDefn( loc($i, $t.l) , $i.text, $t.ast);};
 
 function_definition returns [AstFunDefn ast, Location l]
-		: i=IDENTIFIER '(' (p=parameters)? ')' ':' t=type ('=' s=statement ('{' d=definitions '}')?)? 
-		{ 	$l=loc($i);
+		: i=IDENTIFIER '(' (p=parameters)? ')' ':' t=type ('=' s=statement ('{' d=definitions endd='}')?)? 
+		{ 	
+			if($d.ctx != null)
+				$l=loc($i, $endd);
+			else if($s.ctx != null)
+				$l=loc($i, $s.l);
+			else 
+				$l = loc($i, $t.l);
 			AstNodes<AstFunDefn.AstParDefn> params = null;
 			AstNodes<AstDefn> defns = null;
+			AstStmt stmts = null;
 			if($p.ctx != null) params = $p.pars;
 			if($d.ctx != null) defns = $d.ast;
-			$ast = new AstFunDefn($l,$i.text,params,$t.ast,$s.ast,defns);	
+			if($s.ctx != null) stmts = $s.ast;
+			$ast = new AstFunDefn($l,$i.text,params,$t.ast,stmts,defns);	
 		};
 
 parameters returns [AstNodes<AstFunDefn.AstParDefn> pars]
@@ -134,10 +142,20 @@ statement returns [AstStmt ast, Location l]
 		: 	
 		e=expression r=';' {$l = loc($e.l, $r); $ast = new AstExprStmt($l, $e.ast);}
 		| ls=expression '=' e=expression r=';' {$l = loc($ls.l, $r); $ast = new AstAssignStmt($l, $ls.ast, $e.ast);} 
-		| i='if' e=expression 'then' s=statement ('else' ss=statement)? {$l = loc($i); $ast = new AstIfStmt($l, $e.ast, $s.ast, $ss.ast);}
-		| w='while' e=expression ':' s=statement { $l = loc($w, $e.l); $ast = new AstWhileStmt($l, $e.ast, $s.ast);}
-		| r='return' e=expression k=';' { $l = loc($r, $e.l); $ast = new AstReturnStmt($l, $e.ast);}
-		| ll='{' (s=statement {$l = loc($ll, $r);arr.add($s.ast); $ast = new AstBlockStmt($l, arr);})+ r='}'  
+		| w='while' e=expression ':' s=statement { $l = loc($w, $s.l); $ast = new AstWhileStmt($l, $e.ast, $s.ast);}
+		| r='return' e=expression k=';' { $l = loc($r, $k); $ast = new AstReturnStmt($l, $e.ast);}
+		| ll='{' (s=statement {arr.add($s.ast);})+ r='}'  {$l = loc($ll, $r);  $ast = new AstBlockStmt($l, arr);}
+		| i='if' e=expression 'then' s=statement ('else' ss=statement)? 
+		{
+			$l = loc($i, $s.l);
+			if($ss.ctx != null){
+				$l = loc($i, $ss.l); 
+				$ast = new AstIfStmt($l, $e.ast, $s.ast, $ss.ast);
+			}
+			else{
+				$ast = new AstIfStmt($l, $e.ast, $s.ast, null);
+			}	
+		}
 		;
 
 type returns [AstType ast, Location l]
@@ -147,8 +165,8 @@ type returns [AstType ast, Location l]
 	| i=INT {$ast = new AstAtomType(loc($i), AstAtomType.Type.INT); $l = loc($i);} 
 	| s='[' i=INT_CONST ']' t=type {$l = loc($s, $t.l); $ast = new AstArrType($l, $t.ast, new AstAtomExpr(loc($i), AstAtomExpr.Type.INT, $i.text));} 
 	| a='^' t=type {$l = loc($a, $t.l); $ast = new AstPtrType($l, $t.ast);}
-	| lb='(' cm=components r=')' {$l = loc($lb, $r); $ast = new AstUniType($l, $cm.ast);}
-	| lb='{' cm=components r='}' {$l = loc($lb, $r); $ast = new AstStrType($l, $cm.ast);}
+	| lb='(' cm=components r=')' {$l = loc($lb, $r); $ast = new AstStrType($l, $cm.ast);}
+	| lb='{' cm=components r='}' {$l = loc($lb, $r); $ast = new AstUniType($l, $cm.ast);}
 	| i=IDENTIFIER {$l = loc($i); $ast = new AstNameType($l, $i.text);}
 	;
 
@@ -161,8 +179,9 @@ components returns [AstNodes<AstRecType.AstCmpDefn> ast]
 	$ast = new AstNodes<AstRecType.AstCmpDefn>(arr);
 }
 
-	: i=IDENTIFIER ':' t=type ( o=other_components { if($o.ctx != null) arr.add($o.ast);})*{
-			{l = loc($i, $t.l); arr.add(new AstRecType.AstCmpDefn(l, $i.text, $t.ast)); }
+	: i=IDENTIFIER ':' t=type ( o=other_components { if($o.ctx != null) arr.add($o.ast);})* {	
+		l = loc($i, $t.l); 
+		arr.add(new AstRecType.AstCmpDefn(l, $i.text, $t.ast)); 
 	};
 
 other_components returns [AstRecType.AstCmpDefn ast]
@@ -181,7 +200,7 @@ expression returns[AstExpr ast, Location l]
 		| s=STRING_LIT {$ast = new AstAtomExpr(loc($s), AstAtomExpr.Type.STR, $s.text); $l = loc($s);} 
 		| n=NIL {$ast = new AstAtomExpr(loc($n), AstAtomExpr.Type.PTR, $n.text); $l = loc($n);}
 		| e=expression '[' eb=expression b=']' {$l = loc($e.l, $b); $ast = new AstArrExpr($l, $e.ast, $eb.ast);}
-		| e=expression b='^' { $ast = new AstSfxExpr(loc($e.l, $b), AstSfxExpr.Oper.PTR, $e.ast);} 
+		| e=expression b='^' { $l = loc($e.l, $b); $ast = new AstSfxExpr( $l, AstSfxExpr.Oper.PTR, $e.ast);} 
 		| e=expression '.' i=IDENTIFIER {$l=loc($e.l, $i); $ast = new AstCmpExpr($l, $e.ast, $i.text); }
 		| ae='not' e=expression { $l = loc($ae, $e.l); $ast = new AstPfxExpr($l, AstPfxExpr.Oper.NOT, $e.ast);}
 		| aa='+' e=expression { $l = loc($aa, $e.l); $ast = new AstPfxExpr($l, AstPfxExpr.Oper.ADD, $e.ast);}
@@ -197,11 +216,13 @@ expression returns[AstExpr ast, Location l]
 		| ls='(' e=expression r=')' {$l = loc($ls, $r); $ast = $e.ast;}  
 		| i=IDENTIFIER ( ll='(' ( fnc=fnc_call_expr )? rr=')' )?
 		{
+			$l = loc($i);
 			if($ctx.ll == null) $ast = new AstNameExpr(loc($i), $i.text);
 			else{
 				AstNodes<AstExpr> tmp = null;
 				if($fnc.ctx != null) tmp = $fnc.ast;
-			 	$ast = new AstCallExpr(loc($i, $rr), $i.text, tmp);
+				$l = loc($i, $rr);
+			 	$ast = new AstCallExpr($l, $i.text, tmp);
 			}
 		} 
 		;

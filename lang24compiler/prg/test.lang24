@@ -1,31 +1,15 @@
-func_name (par1 : nov_tip2, par2 : bool, par3 : nov_tip1) : ^nov_tip2 = 
-{
-	x1 = x1[0];
-	x2 = bla_bla_bla;
-	x6 = bla_bla_bla;
-	func_decl();
-	par2 = true;
-	par3 = false;
-}
-{
-	#x1 : [10]int
-	x2 : nov_tip1
-	x3 = {hey : bool}
-	x4 = {hey : bool, x6 : int}
-	x5 = {hey : bool, x6 : int, x7 : ^int}
-	x6 : nov_tip2
-	par3 : int
-	nov_tip1 = int
-	func_decl(): ^char = {
-		return "hello_inside";
-	}
-}
-nov_tip1 = [10]bool # type (nov_tip1) definition
-nov_tip2 = [20]bool # type (nov_tip2) definition
-bla_bla_bla : bool # variable (bla_bla_bla) definition
-x1 : bool
-x2 : int
-	func_decl(): ^char = {
-		return "hello_outside";
-	}
+integer1 = ^integer2
+integer2 = ^integer1
 
+
+func(a:int,b:int):int = {
+	return a;
+     } 
+     {
+
+
+
+     						a:int
+
+
+					}

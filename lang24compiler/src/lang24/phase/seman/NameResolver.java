@@ -42,17 +42,17 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 				if(node instanceof AstFunDefn)
 					node.accept(this, i);
 			}
-			
-			for(final AstNode node : nodes){
-				if(node instanceof AstFunDefn.AstValParDefn || node instanceof AstFunDefn.AstRefParDefn)
-					node.accept(this, i);
-			}
+			if(i == 0) continue;
 			for(final AstNode node : nodes){
 				if(node instanceof AstStmt)
 					node.accept(this, i);
 			}
 		}
 
+		for(final AstNode node : nodes){
+			if(node instanceof AstFunDefn.AstValParDefn || node instanceof AstFunDefn.AstRefParDefn)
+				node.accept(this, arg);	
+		}
 		return null;
 	}
 
@@ -174,6 +174,21 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 				System.out.println("Duplicate definition at: " + refParDefn.location());
 				System.exit(1);
 			}
+		}
+
+		return null;
+	}
+	
+	@Override
+	public Object visit(AstCallExpr callExpr, Integer arg){
+		if(arg == 1){
+			try{
+				AstDefn def = symbTable.fnd(callExpr.name);
+				SemAn.definedAt.put(callExpr, def);
+			}catch(Exception e){
+				System.out.println("No definition found for: " + callExpr.location());
+				System.exit(1);
+			}	
 		}
 
 		return null;
