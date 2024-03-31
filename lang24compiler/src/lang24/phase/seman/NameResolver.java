@@ -38,21 +38,32 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 				if(node instanceof AstVarDefn)
 					node.accept(this, i);
 			}
+			
+		}
+
+		for(int i = 0; i < 2; i++){
 			for(final AstNode node : nodes){
 				if(node instanceof AstFunDefn)
 					node.accept(this, i);
 			}
-			if(i == 0) continue;
-			for(final AstNode node : nodes){
-				if(node instanceof AstStmt)
-					node.accept(this, i);
-			}
+		}
+		
+		if(arg == null) return null;
+		for(final AstNode node : nodes){
+			if(node instanceof AstStmt)
+				node.accept(this, arg);
 		}
 
 		for(final AstNode node : nodes){
 			if(node instanceof AstFunDefn.AstValParDefn || node instanceof AstFunDefn.AstRefParDefn)
 				node.accept(this, arg);	
 		}
+
+		for(final AstNode node : nodes){
+			if(node instanceof AstExpr)
+				node.accept(this, arg);	
+		}
+
 		return null;
 	}
 
@@ -131,16 +142,20 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 				funDefn.pars.accept(this, arg);
 		}
 		if(arg == 1){
+
+			
 			symbTable.newScope();
 			if(funDefn.pars != null)
 				funDefn.pars.accept(this, arg);
 			symbTable.newScope();
 			if(funDefn.defns != null)
 				funDefn.defns.accept(this, arg);
+
 			if(funDefn.stmt!= null)
 				funDefn.stmt.accept(this, arg);
 			symbTable.oldScope();
 			symbTable.oldScope();
+
 		}
 
 		return null;
@@ -183,10 +198,11 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 	public Object visit(AstCallExpr callExpr, Integer arg){
 		if(arg == 1){
 			try{
+				callExpr.args.accept(this, arg);
 				AstDefn def = symbTable.fnd(callExpr.name);
 				SemAn.definedAt.put(callExpr, def);
 			}catch(Exception e){
-				System.out.println("No definition found for: " + callExpr.location());
+				System.out.println("No definition found for: " + callExpr.name + " " + callExpr.location() + " at depth " + symbTable.currDepth());
 				System.exit(1);
 			}	
 		}

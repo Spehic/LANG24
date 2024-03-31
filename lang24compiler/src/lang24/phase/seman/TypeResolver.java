@@ -15,6 +15,9 @@ import lang24.data.type.*;
  */
 public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
+	//map that holds namespaces for different record types (each record type introduces a new namespace -> SymbolTable)
+	final static HashMap<SemType, SymbTable> recMap = new HashMap<SemType, SymbTable>();
+
 	/**
 	 * Structural equivalence of types.
 	 * 
@@ -149,6 +152,8 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 				node.accept(this, arg);
 			if(node instanceof AstStmt)
 				node.accept(this, arg);
+			if(node instanceof AstExpr)
+				node.accept(this, arg);
 		}
 
 		return null;
@@ -205,7 +210,6 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 	@Override
 	public SemType visit(AstArrType arr, Integer arg){
-		System.out.println(arg);
 		SemType typ = arr.elemType.accept(this, arg);
 		
 		if (typ instanceof SemVoidType){
@@ -227,6 +231,33 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		SemType sem = new SemArrayType(typ, size);
 		SemAn.isType.put(arr, sem);
 		return sem;
+	}
+
+	//recMap
+	@Override
+	public SemType visit(AstStrType struct, Integer arg){
+		SymbTable symb = new SymbTable();
+		ArrayList<SemType> list = new ArrayList<SemType>();
+
+		for(AstRecType.AstCmpDefn node : struct.cmps){
+			try{
+				symb.ins(node.name, node);
+			}catch (Exception e){
+				System.out.println("Duplicate name in struct definition: " + struct.location());
+				System.exit(1);
+			}
+			System.out.println(struct.hashCode());
+
+			SemType typ = node.type.accept(this, arg);
+			list.add(typ);
+		}
+
+
+
+		SemStructType res = new SemStructType(list);
+		recMap.put(res, symb);
+		SemAn.isType.put(struct, res);
+		return res;
 	}
 
 	//ValueExpression
@@ -265,13 +296,28 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		return null;
 	}
 
+	@Override
+	public SemType visit(AstNameExpr expr, Integer arg){
+		AstDefn def = SemAn.definedAt.get(expr);
+		SemType typ = SemAn.ofType.get(def);
+		System.out.println("-----------");
+		System.out.println(SemAn.ofType.get(def).hashCode() + " " + typ.hashCode());
+		System.out.println("-----------");
+		if(typ == null){
+			throw new Report.InternalError();
+		}
+
+		SemAn.ofType.put(expr, typ);
+		return typ;
+	}
+
 	//TODO PTR
 	@Override
 	public SemType visit(AstPfxExpr pfxExpr, Integer arg){
 		SemType res = pfxExpr.expr.accept(this, arg);
 		switch(pfxExpr.oper){
 			case AstPfxExpr.Oper.NOT: 
-				if(!(res instanceof SemBoolType)){
+				if(!(equiv(res, SemBoolType.type))){
 					System.out.println("Incompatible types at: " + pfxExpr.location());
 					System.exit(1);
 				}
@@ -280,26 +326,39 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 			
 			case AstPfxExpr.Oper.ADD:
 			case AstPfxExpr.Oper.SUB:
-				if(!(res instanceof SemIntType)){
+				if(!(equiv(res, SemIntType.type))){
 					System.out.println("Incompatible types at: " + pfxExpr.location());
 					System.exit(1);
 				}
 				SemAn.ofType.put(pfxExpr, SemIntType.type);
 				return SemIntType.type;
 			
+				//implementation for sfx wrong
 			case AstPfxExpr.Oper.PTR:
-				break;
-
+				
 		}
 		return null;
+	}
+
+	@Override
+	public SemType visit(AstSfxExpr sfx, Integer arg){
+		SemType res = sfx.expr.accept(this, arg);
+		if(!( res instanceof SemPointerType )){
+			System.out.println("Pointer type expected at: " + sfx.location());
+			System.exit(1);
+		}
+		SemPointerType ptrRes = (SemPointerType) res;
+		SemType actual = ptrRes.baseType;
+		SemAn.ofType.put(sfx, actual);
+		return actual;
 	}
 
 	
 	@Override
 	public SemType visit(AstBinExpr expr, Integer arg){
 		
-		SemType typ1 = expr.fstExpr.accept(this, arg);
-		SemType typ2 = expr.sndExpr.accept(this, arg);
+		SemType typ1 = expr.fstExpr.accept(this, arg).actualType();
+		SemType typ2 = expr.sndExpr.accept(this, arg).actualType();
 
 		if( !equiv(typ1, typ2) ){
 			System.out.println("Type mismatch at: " + expr.location());	
@@ -371,9 +430,11 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 		return null;
 	}
+
 //TODO check if call call is defined as function
 	@Override
 	public SemType visit(AstCallExpr call, Integer arg){
+		if(true) return null;
 		AstFunDefn def = (AstFunDefn) SemAn.definedAt.get(call);
 		SemType resType = SemAn.ofType.get(def);
 
@@ -397,10 +458,146 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		return resType;
 	}
 
+	//check lval
+	@Override
+	public SemType visit(AstArrExpr arr, Integer arg){
+		SemType res1 = arr.arr.accept(this, arg);
+		if(!( res1 instanceof SemArrayType)){
+			System.out.println("Array expected: " + arr.location());
+			System.exit(1);
+		}
+
+		SemType res2 = arr.idx.accept(this, 1);
+		if(!( equiv(res2, SemIntType.type))){
+			System.out.println("Array expects int index: " + arr.location());
+			System.exit(1);
+		}
+
+		Boolean chk = SemAn.isLVal.get(arr.arr);
+		if(!chk) {
+			System.out.println("Array expects lval at: "  + arr.location());
+			System.exit(1);
+		}
+		
+		SemArrayType arrTyp = (SemArrayType) res1;
+		SemAn.ofType.put(arr, arrTyp.elemType);
+		return res1;
+	}
+
+	@Override
+	public SemType visit(AstCmpExpr cmp, Integer arg){
+		AstNameExpr expr = (AstNameExpr) cmp.expr;
+		SemType typ = expr.accept(this, arg);
+
+		System.out.println(typ.hashCode() +"what	");
+		SymbTable symb = recMap.get(typ);
+		System.out.println(symb);
+
+		try{
+			AstNode node = symb.fnd(cmp.name);
+		}catch(SymbTable.CannotFndNameException e){
+			System.out.println("Component name not found "  + cmp.location());
+			System.exit(1);
+		}
+
+
+		return null;
+	}
+
+	@Override
+	public SemType visit(AstCastExpr cast, Integer arg){
+		SemType expr = cast.expr.accept(this, arg);
+		SemType typ = cast.type.accept(this, 1);
+
+		SemAn.ofType.put(cast, typ);
+		return typ;
+	}
+
+	@Override
+	public SemType visit(AstSizeofExpr size, Integer arg){
+		SemType res = size.type.accept(this, 1);
+
+		if( res == null){
+			throw new Report.InternalError();
+		}
+
+		SemAn.ofType.put(size, SemIntType.type);
+		return SemIntType.type;
+	}
 
 
 	//Statements
-	
+	@Override
+	public SemType visit(AstAssignStmt stmt, Integer arg){
+		SemType expr1 = stmt.dst.accept(this, arg);
+		SemType expr2 = stmt.src.accept(this, arg);
+
+		if(!( equiv(expr1, expr2) )){
+			System.out.println("Type mismatch at: "  + stmt.location());
+			System.exit(1);
+		}
+
+		if( expr1 instanceof SemVoidType) {
+			System.out.println("Void type not allowed in assign statement: "  + stmt.location());
+			System.exit(1);
+		}
+
+		SemAn.ofType.put(stmt, SemVoidType.type);
+		return SemVoidType.type;
+	}
+
+	@Override
+	public SemType visit(AstIfStmt stmt, Integer arg){
+		SemType typ = stmt.cond.accept(this, arg);
+		SemType stms1 = stmt.thenStmt.accept(this, arg);
+		SemType stms2 = null;
+
+
+		if(stmt.elseStmt != null){
+			stms2 = stmt.elseStmt.accept(this, arg);
+		}
+
+		if(!( typ instanceof SemBoolType)) {
+			System.out.println("If condition must be of bool type: "  + stmt.location());
+			System.exit(1);
+		}
+
+		if(stms1 == null || (stmt.elseStmt != null) && stms2 == null){
+			throw new Report.InternalError();
+		}
+
+		SemAn.ofType.put(stmt, SemVoidType.type);
+		return SemVoidType.type;
+	}
+
+	@Override
+	public SemType visit(AstWhileStmt stmt, Integer arg){
+		SemType typ = stmt.cond.accept(this, arg);
+
+		if(typ == null)
+			throw new Report.InternalError();
+
+		if(!( typ instanceof SemBoolType)){
+			System.out.println("While condition must be of bool type: "  + stmt.location());
+			System.exit(1);
+		}
+
+		SemType stmts = stmt.stmt.accept(this, arg);
+		if(stmt == null)
+			throw new Report.InternalError();
+
+		SemAn.ofType.put(stmt, SemVoidType.type);
+		return SemVoidType.type;
+	}
+
+	@Override
+	public SemType visit(AstBlockStmt blockStmt, Integer arg){
+		if (blockStmt.stmts != null)
+			blockStmt.stmts.accept(this, arg);
+		SemAn.ofType.put(blockStmt, SemVoidType.type);
+		return SemVoidType.type;
+	}
+
 	//Declarations
 	@Override
 	public SemType visit(AstTypDefn typDefn, Integer arg){
@@ -422,6 +619,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 			if(resType instanceof SemVoidType){
 				System.out.println("Void variables not allowed: " + varDefn.location());
+				System.exit(1);
 			}
 
 			SemAn.ofType.put(varDefn, resType);
@@ -459,6 +657,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 			if(resType instanceof SemVoidType){
 				System.out.println("Void parameters not allowed: " + valParDefn.location());
+				System.exit(1);
 			}
 
 			SemAn.ofType.put(valParDefn, resType);
@@ -474,6 +673,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 			if(resType instanceof SemVoidType){
 				System.out.println("Void parameters not allowed: " + valRefDefn.location());
+				System.exit(1);
 			}
 
 			SemAn.ofType.put(valRefDefn, resType);

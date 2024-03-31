@@ -179,9 +179,8 @@ components returns [AstNodes<AstRecType.AstCmpDefn> ast]
 	$ast = new AstNodes<AstRecType.AstCmpDefn>(arr);
 }
 
-	: i=IDENTIFIER ':' t=type ( o=other_components { if($o.ctx != null) arr.add($o.ast);})* {	
-		l = loc($i, $t.l); 
-		arr.add(new AstRecType.AstCmpDefn(l, $i.text, $t.ast)); 
+	: i=IDENTIFIER ':' t=type  { l = loc($i, $t.l); arr.add(new AstRecType.AstCmpDefn(l, $i.text, $t.ast));}	 ( o=other_components { if($o.ctx != null) arr.add($o.ast);})* {	
+		 
 	};
 
 other_components returns [AstRecType.AstCmpDefn ast]
@@ -234,8 +233,8 @@ expression returns[AstExpr ast, Location l]
  @after{
 		$ast = new AstNodes(arr);
  }
- 	: ea=expression ( ',' eb=expression {if($eb.ctx != null) arr.add($eb.ast);} )*
-	{arr.add($ea.ast);} 
+ 	: ea=expression {arr.add($ea.ast);}  ( ',' eb=expression {if($eb.ctx != null) arr.add($eb.ast);} )*
+	
 	;
 
 
