@@ -1,4 +1,4 @@
-package lang24.phase.seman;
+		package lang24.phase.seman;
 
 import java.util.*;
 import lang24.common.report.*;
@@ -134,6 +134,21 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 				if(node instanceof AstVarDefn)
 					node.accept(this, i);
 			}
+		}
+		for(int i = 0; i < 3; i++){
+			for(AstNode node: nodes){
+				if(node instanceof AstFunDefn)
+					node.accept(this, i);
+			}
+		}
+
+		for(AstNode node: nodes){
+			if(node instanceof AstFunDefn.AstValParDefn)
+				node.accept(this, arg);
+			if(node instanceof AstFunDefn.AstRefParDefn)
+				node.accept(this, arg);
+			if(node instanceof AstStmt)
+				node.accept(this, arg);
 		}
 
 		return null;
@@ -282,16 +297,104 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 	
 	@Override
 	public SemType visit(AstBinExpr expr, Integer arg){
-		if( arg == 2 ){
-			SemType typ1 = expr.fstExpr.accept(this, arg);
-			SemType typ2 = expr.sndExpr.accept(this, arg);
+		
+		SemType typ1 = expr.fstExpr.accept(this, arg);
+		SemType typ2 = expr.sndExpr.accept(this, arg);
 
-			if( !equiv(typ1, typ2) ){
-				System.out.println("Type mismatch at: " + expr.location());	
-			}
+		if( !equiv(typ1, typ2) ){
+			System.out.println("Type mismatch at: " + expr.location());	
+			System.exit(1);
+		}
+		
+		switch(expr.oper){
+			case AstBinExpr.Oper.ADD:
+			case AstBinExpr.Oper.SUB:
+			case AstBinExpr.Oper.MUL:
+			case AstBinExpr.Oper.DIV:
+			case AstBinExpr.Oper.MOD:
+				if(!( typ1 instanceof SemIntType)){
+					System.out.println("Int expected at: " + expr.location());	
+					System.exit(1);
+				}
+				if(!( typ2 instanceof SemIntType)){
+					System.out.println("Int expected at: " + expr.location());	
+					System.exit(1);
+				}
+
+				SemAn.ofType.put(expr, SemIntType.type);
+				return SemIntType.type;
+			
+			case AstBinExpr.Oper.EQU:
+			case AstBinExpr.Oper.NEQ:
+				if( typ1 instanceof SemVoidType){
+					System.out.println("Void unexpected at: " + expr.location());	
+					System.exit(1);
+				}
+				if( typ2 instanceof SemVoidType){
+					System.out.println("Void unexpected at: " + expr.location());	
+					System.exit(1);
+				}
+
+				SemAn.ofType.put(expr, SemBoolType.type);
+				return SemBoolType.type;
+			
+			case AstBinExpr.Oper.AND:
+			case AstBinExpr.Oper.OR:
+				if(!( typ1 instanceof SemBoolType )){
+					System.out.println("Bool expected at: " + expr.location());	
+					System.exit(1);
+				}
+				if(!( typ2 instanceof SemBoolType )){
+					System.out.println("Bool expected at: " + expr.location());	
+					System.exit(1);
+				}
+
+				SemAn.ofType.put(expr, SemBoolType.type);
+				return SemBoolType.type;
+			
+			case AstBinExpr.Oper.LTH:
+			case AstBinExpr.Oper.GTH:
+			case AstBinExpr.Oper.LEQ:
+			case AstBinExpr.Oper.GEQ:
+				if( typ1 instanceof SemVoidType || typ1 instanceof SemBoolType ){
+					System.out.println("Unexpected type at: " + expr.location());	
+					System.exit(1);
+				}
+				if( typ2 instanceof SemVoidType || typ2 instanceof SemBoolType ){
+					System.out.println("Unexpected type at: " + expr.location());	
+					System.exit(1);
+				}
+
+				SemAn.ofType.put(expr, SemBoolType.type);
+				return SemBoolType.type;
 		}
 
 		return null;
+	}
+//TODO check if call call is defined as function
+	@Override
+	public SemType visit(AstCallExpr call, Integer arg){
+		AstFunDefn def = (AstFunDefn) SemAn.definedAt.get(call);
+		SemType resType = SemAn.ofType.get(def);
+
+		if(def.pars.size() != call.args.size()){
+			System.out.println("Incorrect amount of arguments passed at: " + call.location());
+			System.exit(1);
+		}
+
+		for(int i = 0; i < def.pars.size(); i++){
+			AstNode a = def.pars.get(i);
+			AstNode b = call.args.get(i);
+			SemType at = SemAn.ofType.get(a);
+			SemType bt = b.accept(this, arg);
+			if (!equiv(at, bt)){
+				System.out.println("Type mismatch at: " + call.location());
+				System.exit(1);
+			}
+		}
+
+		SemAn.ofType.put(call, resType);
+		return resType;
 	}
 
 
@@ -328,8 +431,54 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		return null;
 	}
 
-	/*@Override
-	public SemType visit(){
+	@Override
+	public SemType visit(AstFunDefn funDefn, Integer arg){
+		SemType res = null;
+		if(arg == 0){
+			if(funDefn.pars != null)
+				funDefn.pars.accept(this, 1);
+
+			res = funDefn.type.accept(this, 1);
+			SemAn.ofType.put(funDefn, res);
+
+			if(funDefn.defns != null)
+				funDefn.defns.accept(this, arg);
+		}
+		if(arg == 1){
+			if(funDefn.stmt != null)
+				funDefn.stmt.accept(this, arg);
+		}
 		
-	}*/
+		return res;
+	}
+
+	@Override
+	public SemType visit(AstFunDefn.AstValParDefn valParDefn, Integer arg){
+		if (arg == 1) {
+			SemType resType = valParDefn.type.accept(this, arg);
+
+			if(resType instanceof SemVoidType){
+				System.out.println("Void parameters not allowed: " + valParDefn.location());
+			}
+
+			SemAn.ofType.put(valParDefn, resType);
+		}
+
+		return null;
+	}
+
+	@Override
+	public SemType visit(AstFunDefn.AstRefParDefn valRefDefn, Integer arg){
+		if (arg == 1) {
+			SemType resType = valRefDefn.type.accept(this, arg);
+
+			if(resType instanceof SemVoidType){
+				System.out.println("Void parameters not allowed: " + valRefDefn.location());
+			}
+
+			SemAn.ofType.put(valRefDefn, resType);
+		}
+
+		return null;
+	}
 }
