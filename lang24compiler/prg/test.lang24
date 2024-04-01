@@ -40,7 +40,7 @@ calc_diff(in:^timestamp):int = {
 			curr.min = 11;
 			curr.seconds = 11;
 			return ^curr;
-		}{time=(hour:int, min:int, seconds:int) curr:time}
+		}{time={hour:int, min:int, seconds:int} curr:time}
 	}
 }
 

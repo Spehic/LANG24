@@ -263,6 +263,35 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		return res;
 	}
 
+	@Override
+	public SemType visit(AstUniType union, Integer arg){
+		SymbTable symb = new SymbTable();
+		ArrayList<SemType> list = new ArrayList<SemType>();
+
+		for(AstRecType.AstCmpDefn node : union.cmps){
+			node.accept(this, arg);
+			try{
+				symb.ins(node.name, node);
+			}catch (Exception e){
+				System.out.println("Duplicate name in union definition: " + union.location());
+				System.exit(1);
+			}
+
+
+			SemType typ = node.type.accept(this, arg);
+			list.add(typ);
+		}
+
+
+
+		SemUnionType res = new SemUnionType(list);
+		System.out.println(res.hashCode() + "dajam dnot" + symb);
+		recMap.put(res, symb);
+		System.out.println(recMap.get(res));
+		SemAn.isType.put(union, res);
+		return res;
+	}
+	
 	//ValueExpression
 	
 	@Override
