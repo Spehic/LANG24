@@ -1,11 +1,11 @@
-
-timestamp=(
+timestamp={
 	timezone:[8]char,
 	hour:int,
 	min:int,
 	seconds:int,
 	date:[256]char
-)
+}
+start:timestamp
 
 calc_diff(in:^timestamp):int = {
 	end.diff = 1;
@@ -16,15 +16,15 @@ calc_diff(in:^timestamp):int = {
 	return diff.diff;
 }{
 	end:timestamp 
-	timestamp=(
+	timestamp={
 		diff:int,
 		date:^[256]char
-	)
+	} 
 	diff:timestamp
 	
 	some_time:^time
 	
-	time=(hour:int, min:int, seconds:int)
+	time={hour:int, min:int, seconds:int}
 	
 	this_time(right_now:^timestamp):^time={
 		returned = return_time();
@@ -33,7 +33,7 @@ calc_diff(in:^timestamp):int = {
 		returned^.seconds = returned^.seconds + right_now^.diff;
 		return returned;
 	}{
-		time=(hour:int, min:int, seconds:int)
+		time={hour:int, min:int, seconds:int}
 		returned:^time
 		return_time():^time = {
 			curr.hour = 11;
@@ -64,15 +64,16 @@ get_curr_timestamp():^timestamp = {
 	return ^now;
 }{now:timestamp}
 
-recur=(
-	sive:(
-		sive:(
+recur={
+	sive:{
+		sive:{
 			sive:int
-		)
-	),
-	recur:(
+		}
+	},
+	recur:{
 		sive:int
-	)
-)
+	}
+}
 somevar:recur
 
+#test_func():void = somevar.sive.sive.sive = 1;

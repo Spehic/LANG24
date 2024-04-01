@@ -16,7 +16,9 @@ import lang24.data.type.*;
 public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 	//map that holds namespaces for different record types (each record type introduces a new namespace -> SymbolTable)
-	final static HashMap<SemType, SymbTable> recMap = new HashMap<SemType, SymbTable>();
+	final static private HashMap<SemType, SymbTable> recMap = new HashMap<SemType, SymbTable>();
+	//stack used for checking type of return statements
+	final static private Stack<SemType> lastFnc = new Stack<SemType>();
 
 	/**
 	 * Structural equivalence of types.
@@ -256,9 +258,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 
 		SemStructType res = new SemStructType(list);
-		System.out.println(res.hashCode() + "dajam dnot" + symb);
 		recMap.put(res, symb);
-		System.out.println(recMap.get(res));
 		SemAn.isType.put(struct, res);
 		return res;
 	}
@@ -285,9 +285,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 
 		SemUnionType res = new SemUnionType(list);
-		System.out.println(res.hashCode() + "dajam dnot" + symb);
 		recMap.put(res, symb);
-		System.out.println(recMap.get(res));
 		SemAn.isType.put(union, res);
 		return res;
 	}
@@ -649,6 +647,19 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		return SemVoidType.type;
 	}
 
+	@Override
+	public SemType visit(AstReturnStmt retStmt, Integer arg){
+		SemType res = retStmt.expr.accept(this, arg);
+		SemType last = lastFnc.peek();
+
+		if(!( equiv(res, last) )){
+			System.out.println("Return type does not match: "  + retStmt.location());
+			System.exit(1);
+		}
+		SemAn.ofType.put(retStmt, SemVoidType.type);
+		return SemVoidType.type;
+	}
+
 	//Declarations
 	@Override
 	public SemType visit(AstTypDefn typDefn, Integer arg){
@@ -694,8 +705,11 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 				funDefn.defns.accept(this, arg);
 		}
 		if(arg == 1){
+			SemType typ = SemAn.ofType.get(funDefn);
+			lastFnc.push(typ);
 			if(funDefn.stmt != null)
 				funDefn.stmt.accept(this, arg);
+			lastFnc.pop();
 		}
 		
 		return res;
