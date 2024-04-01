@@ -116,11 +116,12 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 	@Override
 	public Object visit(AstNameExpr nameExpr, Integer arg){
 		if(arg == 1){
+			System.out.println(nameExpr.name);
 			try{
 				AstDefn def = symbTable.fnd(nameExpr.name);
 				SemAn.definedAt.put(nameExpr, def);
 			}catch(Exception e){
-				System.out.println("No definition found for: " + nameExpr.location());
+				System.out.println("No definition found for name: " + nameExpr.location());
 				System.exit(1);
 			}
 		}
@@ -131,6 +132,7 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 	public Object visit(AstFunDefn funDefn, Integer arg){
 		if(arg == 0){
 			try{
+				//System.out.println("inserting " + funDefn.name + " at: " + (symbTable.currDepth()));
 				symbTable.ins(funDefn.name, funDefn);
 			}catch(Exception e){
 				System.out.println("Duplicate definition at: " + funDefn.location());
@@ -143,10 +145,11 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 		}
 		if(arg == 1){
 
-			
+			//System.out.println("entering params " + (symbTable.currDepth() + 1));
 			symbTable.newScope();
 			if(funDefn.pars != null)
 				funDefn.pars.accept(this, arg);
+			//System.out.println("entering defns and stmts " + (symbTable.currDepth() + 1));
 			symbTable.newScope();
 			if(funDefn.defns != null)
 				funDefn.defns.accept(this, arg);
@@ -155,7 +158,7 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 				funDefn.stmt.accept(this, arg);
 			symbTable.oldScope();
 			symbTable.oldScope();
-
+			//System.out.println("leaving to " + symbTable.currDepth());
 		}
 
 		return null;
@@ -197,12 +200,13 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 	@Override
 	public Object visit(AstCallExpr callExpr, Integer arg){
 		if(arg == 1){
-			try{
+			if(callExpr.args != null)
 				callExpr.args.accept(this, arg);
+			try{
 				AstDefn def = symbTable.fnd(callExpr.name);
 				SemAn.definedAt.put(callExpr, def);
 			}catch(Exception e){
-				System.out.println("No definition found for: " + callExpr.name + " " + callExpr.location() + " at depth " + symbTable.currDepth());
+				System.out.println("No definition found for function: " + callExpr.name + " " + callExpr.location() + " at depth " + symbTable.currDepth());
 				System.exit(1);
 			}	
 		}
