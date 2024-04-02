@@ -82,7 +82,7 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 				continue;
 			}
 
-			Integer res= node.accept(this, arg);
+			Integer res = node.accept(this, arg);
 			if(res != null)
 				total += res;
 		}
