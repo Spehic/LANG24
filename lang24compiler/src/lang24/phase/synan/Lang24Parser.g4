@@ -99,17 +99,20 @@ parameters returns [AstNodes<AstFunDefn.AstParDefn> pars]
 	else $pars = new AstNodes(arr);
 }
 		:{flag = true;}
-		ta=tick ia=IDENTIFIER ':' t=type ( o=other_params {  if($o.ctx != null) arr.add($o.othrs);} )*
+		ta=tick ia=IDENTIFIER ':' t=type 
 		{
-		flag = false;
-		if($ta.b){
-			l = loc($ta.l, $t.l);		
-			arr.add(new AstFunDefn.AstRefParDefn(l, $ia.text, $t.ast));
-		} else{
-			l = loc($ia, $t.l);		
-			arr.add(new AstFunDefn.AstValParDefn(l, $ia.text, $t.ast));
+			flag = false;
+			if($ta.b){
+				l = loc($ta.l, $t.l);		
+				arr.add(new AstFunDefn.AstRefParDefn(l, $ia.text, $t.ast));
+			} else{
+				l = loc($ia, $t.l);		
+				arr.add(new AstFunDefn.AstValParDefn(l, $ia.text, $t.ast));
+			}
 		}
-		}; 
+
+		( o=other_params {  if($o.ctx != null) arr.add($o.othrs);} )*
+		; 
 
 
 other_params returns [AstFunDefn.AstParDefn othrs]
