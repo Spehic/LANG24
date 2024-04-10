@@ -1,6 +1,10 @@
-tipOdZunaj = vmesniTip
-vmesniTip = {id: tipOdZnotrej}
-tipOdZnotrej = {id: (i: ^[1]tipOdZunaj, j: ^[1]^^tipOdZnotrej)}
-fun() : ^vmesniTip = { # should be good
-    return ^lala;
-} { lala : {id : {id: (i: ^[1]tipOdZunaj, j: ^[1]^^tipOdZnotrej)}} }
+ab = ^int
+
+fun():int = {
+	p = g;
+	g^ = 5;
+	return 2;
+}{
+	p:^int
+	g:ab
+}

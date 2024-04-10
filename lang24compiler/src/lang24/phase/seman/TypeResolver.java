@@ -329,10 +329,8 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 	@Override
 	public SemType visit(AstNameExpr expr, Integer arg){
 		AstDefn def = SemAn.definedAt.get(expr);
-		System.out.println(def);
 		SemType typ = SemAn.ofType.get(def);
 
-		System.out.println(expr.name);
 		if(typ == null){
 			throw new Report.InternalError();
 		}
@@ -372,12 +370,13 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 				SemAn.ofType.put(pfxExpr, typ);
 				return typ;
 		}
+		
 		return null;
 	}
 
 	@Override
 	public SemType visit(AstSfxExpr sfx, Integer arg){
-		SemType res = sfx.expr.accept(this, arg);
+		SemType res = sfx.expr.accept(this, arg).actualType();
 		if(!( res instanceof SemPointerType )){
 			System.out.println("Pointer type expected at: " + sfx.location());
 			System.exit(1);
@@ -509,7 +508,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 	//check lval
 	@Override
 	public SemType visit(AstArrExpr arr, Integer arg){
-		SemType res1 = arr.arr.accept(this, arg);
+		SemType res1 = arr.arr.accept(this, arg).actualType();
 		if(!( res1 instanceof SemArrayType)){
 			System.out.println("Array expected: " + arr.location());
 			System.exit(1);
