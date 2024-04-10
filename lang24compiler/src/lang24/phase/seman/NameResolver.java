@@ -62,6 +62,8 @@ public class NameResolver implements AstFullVisitor<Object, Integer> {
 		for(final AstNode node : nodes){
 			if(node instanceof AstExpr)
 				node.accept(this, arg);	
+			if(node instanceof AstRecType.AstCmpDefn)
+				node.accept(this, arg);	
 		}
 
 		return null;

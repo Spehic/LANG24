@@ -123,13 +123,22 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 		currentMaxArg = 0;
 		if(funDefn.stmt != null)
 			funDefn.stmt.accept(this, arg);
+	
+		if(currentMaxArg > 0)
+			currentMaxArg += 8;
+		currDepth -= 1;
 
-		long totalSize = localSize + 8 + 8 + currentMaxArg;
-		MemLabel label = new MemLabel(funDefn.name);
+		long totalSize = localSize + 8 + currentMaxArg;
+
+		MemLabel label = null;
+		if( currDepth == 0)
+			label = new MemLabel(funDefn.name);
+		else
+			label = new MemLabel();
+
 		MemFrame frame = new MemFrame(label, (long)currDepth, localSize, currentMaxArg, totalSize);
 		Memory.frames.put(funDefn, frame);
 
-		currDepth -= 1;
 		return 0;
 	}
 
@@ -184,12 +193,12 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 		
 		//struct type
 		if( arg == 0 ){
-			MemRelAccess mem = new MemRelAccess(size, currentComponentOffset, currDepth);
+			MemRelAccess mem = new MemRelAccess(size, currentComponentOffset, -1);
 			currentComponentOffset += size;
 			Memory.cmpAccesses.put(cmp, mem);
 			return size;
 		} else {
-			MemRelAccess mem = new MemRelAccess(size, 0, currDepth);
+			MemRelAccess mem = new MemRelAccess(size, 0, -1);
 			Memory.cmpAccesses.put(cmp, mem);
 			return size;
 		}	

@@ -331,6 +331,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		AstDefn def = SemAn.definedAt.get(expr);
 		SemType typ = SemAn.ofType.get(def);
 
+
 		if(typ == null){
 			throw new Report.InternalError();
 		}
@@ -339,7 +340,6 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		return typ;
 	}
 
-	//TODO PTR
 	@Override
 	public SemType visit(AstPfxExpr pfxExpr, Integer arg){
 		SemType res = pfxExpr.expr.accept(this, arg);
@@ -362,7 +362,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 				return SemIntType.type;
 			
 			case AstPfxExpr.Oper.PTR:
-				if( !SemAn.isLVal.get(pfxExpr.expr)) {
+				if( SemAn.isLVal.get(pfxExpr.expr) == null) {
 					System.out.println("Lval expected: " + pfxExpr.location());
 					System.exit(1);
 				}
