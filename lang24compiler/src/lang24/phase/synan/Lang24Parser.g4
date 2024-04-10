@@ -49,7 +49,7 @@ options{
 }
 
 
-source returns [AstNodes ast]: d=definitions {$ast = $d.ast;} ;
+source returns [AstNodes ast]: d=definitions  EOF {$ast = $d.ast;} ;
 
 definitions returns [AstNodes<AstDefn> ast]
 @init{
