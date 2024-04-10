@@ -1,10 +1,10 @@
-ab = ^int
+a:bool
+b:char
+c:int
 
-fun():int = {
-	p = g;
-	g^ = 5;
-	return 2;
-}{
-	p:^int
-	g:ab
+fun():void = {
+	a = true;
+	a = false;
+	b = 'a';
+	c = +312;
 }

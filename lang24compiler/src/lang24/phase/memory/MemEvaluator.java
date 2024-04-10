@@ -124,6 +124,10 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 		if(funDefn.stmt != null)
 			funDefn.stmt.accept(this, arg);
 
+		//ce je klic z argumenti potrebujem static link
+		if( currentMaxArg != 0) 
+			currentMaxArg += 8;
+			
 		long totalSize = localSize + 8 + 8 + currentMaxArg;
 		MemLabel label = new MemLabel(funDefn.name);
 		MemFrame frame = new MemFrame(label, (long)currDepth, localSize, currentMaxArg, totalSize);
