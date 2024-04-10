@@ -8,9 +8,7 @@ import lang24.data.ast.tree.type.*;
 import lang24.data.ast.tree.stmt.*;
 import lang24.data.ast.visitor.*;
 import lang24.data.imc.code.*;
-import lang24.data.imc.code.expr.ImcCONST;
-import lang24.data.imc.code.expr.ImcExpr;
-import lang24.data.imc.code.expr.ImcUNOP;
+import lang24.data.imc.code.expr.*;
 
 
 
@@ -20,8 +18,8 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 	}
 
 	//Expressions
-	@
-	Override
+	
+	@Override
 	public ImcInstr visit(AstAtomExpr expr, Integer arg) {
 		ImcCONST imc = null;
 		switch(expr.type){
@@ -61,17 +59,54 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		switch(pfxExpr.oper){
 			case AstPfxExpr.Oper.NOT:
 				imc = new ImcUNOP(ImcUNOP.Oper.NOT, res);
-				break;
+				ImcGen.exprImc.put(pfxExpr, imc);
+				return imc;
 			case AstPfxExpr.Oper.ADD:
-				imc = new ImcUNOP(null, res);
-				break;
+				ImcGen.exprImc.put(pfxExpr, res);
+				return res;
 			case AstPfxExpr.Oper.SUB:
 				imc = new ImcUNOP(ImcUNOP.Oper.NEG, res);
-				break;
+				ImcGen.exprImc.put(pfxExpr, imc);
+				return imc;
+			case AstPfxExpr.Oper.PTR:
+				ImcGen.exprImc.put(pfxExpr, res);
+				return res;
 		}
 
-		ImcGen.exprImc.put(pfxExpr, imc);
+		throw new Report.InternalError();
+	}
+
+	@Override
+	public ImcInstr visit(AstBinExpr binExpr, Integer arg){
+		ImcExpr expr1 = (ImcExpr) binExpr.fstExpr.accept(this, arg);
+		ImcExpr expr2 = (ImcExpr) binExpr.sndExpr.accept(this, arg);
+
+		if(expr1 == null)
+			throw new Report.InternalError();
+
+		if(expr2 == null)
+			throw new Report.InternalError();
+		
+		int enumVal = binExpr.oper.ordinal();
+		ImcBINOP.Oper operand = ImcBINOP.Oper.values()[enumVal]; 
+		ImcBINOP imc = new ImcBINOP(operand, expr1, expr2);
+
+		ImcGen.exprImc.put(binExpr, imc);
 		return imc;
 	}
+
+	@Override
+	public ImcInstr visit(AstSfxExpr sfxExpr, Integer arg){	
+		ImcExpr res = (ImcExpr) sfxExpr.expr.accept(this, arg);
+
+		if(res == null)
+			throw new Report.InternalError();
+
+		ImcMEM mem = new ImcMEM(res);
+		ImcGen.exprImc.put(sfxExpr, mem);
+		return mem;
+	}
+
+
 
 }

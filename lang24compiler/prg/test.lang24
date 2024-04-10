@@ -1,0 +1,10 @@
+f():void = {
+	a = 2 + 3;
+	a = -12;
+	g = ^a;
+}{
+	a:int
+	b:bool
+	g:^int
+
+}
