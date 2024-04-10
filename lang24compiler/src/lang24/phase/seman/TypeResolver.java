@@ -329,8 +329,10 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 	@Override
 	public SemType visit(AstNameExpr expr, Integer arg){
 		AstDefn def = SemAn.definedAt.get(expr);
+		System.out.println(def);
 		SemType typ = SemAn.ofType.get(def);
 
+		System.out.println(expr.name);
 		if(typ == null){
 			throw new Report.InternalError();
 		}
@@ -369,7 +371,6 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 				SemType typ = new SemPointerType(res);
 				SemAn.ofType.put(pfxExpr, typ);
 				return typ;
-				
 		}
 		return null;
 	}

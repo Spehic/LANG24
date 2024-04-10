@@ -1,29 +1,6 @@
-x: int
-y: int
-main(x: int, y: int) : int = {
-	x = x + y;
-	f1(x, x);
-	return x + y;
-} {
-	t = {x: int, y: bool, c: char}
-	x: int
-	y: int
-	z: ^char
-	f1(x: int, y: int): void = {
-		x = y;
-		c = c and c;
-		z = "stringic";
-		f3();
-	} {
-		c: bool
-		h: t
-		f3(): void = {
-			h = w^;
-		} {
-			h: int
-			w: ^int
-		}
-	}
-}
-
-
+tipOdZunaj = vmesniTip
+vmesniTip = {id: tipOdZnotrej}
+tipOdZnotrej = {id: (i: ^[1]tipOdZunaj, j: ^[1]^^tipOdZnotrej)}
+fun() : ^vmesniTip = { # should be good
+    return ^lala;
+} { lala : {id : {id: (i: ^[1]tipOdZunaj, j: ^[1]^^tipOdZnotrej)}} }
