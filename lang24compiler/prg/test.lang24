@@ -5,6 +5,8 @@ c:int
 fun():void = {
 	a = true;
 	a = false;
-	b = 'a';
-	c = +312;
+	b = 'G';
+	c = -312;
+	a = not true;
+	c = + 312;
 }

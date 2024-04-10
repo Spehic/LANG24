@@ -9,6 +9,8 @@ import lang24.data.ast.tree.stmt.*;
 import lang24.data.ast.visitor.*;
 import lang24.data.imc.code.*;
 import lang24.data.imc.code.expr.ImcCONST;
+import lang24.data.imc.code.expr.ImcExpr;
+import lang24.data.imc.code.expr.ImcUNOP;
 
 
 
@@ -53,12 +55,23 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 	}
 
 	@Override
-	public ImcCONST visit(AstPfxExpr pfxExpr, Integer arg){
+	public ImcInstr visit(AstPfxExpr pfxExpr, Integer arg){
+		ImcExpr res = (ImcExpr) pfxExpr.expr.accept(this, arg);
+		ImcUNOP imc = null;
 		switch(pfxExpr.oper){
 			case AstPfxExpr.Oper.NOT:
+				imc = new ImcUNOP(ImcUNOP.Oper.NOT, res);
+				break;
 			case AstPfxExpr.Oper.ADD:
-			case AstPfxExpr.Oper.SUB:	
+				imc = new ImcUNOP(null, res);
+				break;
+			case AstPfxExpr.Oper.SUB:
+				imc = new ImcUNOP(ImcUNOP.Oper.NEG, res);
+				break;
 		}
+
+		ImcGen.exprImc.put(pfxExpr, imc);
+		return imc;
 	}
 
 }
