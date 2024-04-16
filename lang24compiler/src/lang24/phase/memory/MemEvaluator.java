@@ -73,14 +73,15 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 	public Integer visit(AstNodes<? extends AstNode> nodes, Integer arg){
 		int total = 0;
 		for(AstNode node : nodes){
-			if(node instanceof AstStmt){
+			/*if(node instanceof AstStmt){
 				node.accept(this, arg);
 				continue;
 			}
 			if(node instanceof AstExpr){
 				node.accept(this, arg);
 				continue;
-			}
+			}*/
+			
 
 			Integer res = node.accept(this, arg);
 			if(res != null)
@@ -137,8 +138,6 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 			label = new MemLabel();
 
 		//ce je klic z argumenti potrebujem static link
-		if( currentMaxArg != 0) 
-			currentMaxArg += 8;
 			
 		totalSize = localSize + 8 + 8 + currentMaxArg;
 		MemFrame frame = new MemFrame(label, (long)currDepth, localSize, currentMaxArg, totalSize);
@@ -212,10 +211,10 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 
 	@Override
 	public Integer visit(AstAtomExpr atom, Integer arg){
-		
+		System.out.println("atomexpor");
 		if(atom.type == AstAtomExpr.Type.STR){
 			MemLabel label = new MemLabel();
-			MemAbsAccess mem = new MemAbsAccess(atom.value.length() + 1, label,atom.value);
+			MemAbsAccess mem = new MemAbsAccess(atom.value.length() - 1, label,atom.value);
 			Memory.strings.put(atom, mem);
 		}
 
@@ -232,6 +231,7 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 
 		for(AstExpr ex : call.args){
 			total += calcSize(SemAn.ofType.get(ex));
+			ex.accept(this, arg);
 		}
 		
 		if(total > currentMaxArg)

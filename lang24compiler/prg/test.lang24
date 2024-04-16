@@ -1,10 +1,5 @@
-f():void = {
-	a = 2 + 3;
-	a = -12;
-	g = ^a;
+f():int = {
+	f();
 }{
 	a:int
-	b:bool
-	g:^int
-
 }
