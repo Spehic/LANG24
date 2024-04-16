@@ -1,4 +1,4 @@
-		package lang24.phase.seman;
+package lang24.phase.seman;
 
 import java.util.*;
 import lang24.common.report.*;
@@ -552,7 +552,8 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		SemAn.ofType.put(cmp, res);
 		return res;
 	}
-
+	
+	//TODO ADD lvalue check
 	@Override
 	public SemType visit(AstCastExpr cast, Integer arg){
 		SemType expr = cast.expr.accept(this, arg);

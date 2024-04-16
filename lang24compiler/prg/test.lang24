@@ -1,5 +1,10 @@
+a:int
+
 f():int = {
-	f();
-}{
-	a:int
+	a = 12 + a;
+	while a < 4: a = a + 1;
+	if a < 4 then a = 2; else a = 3;
+	return 210;
 }
+
+

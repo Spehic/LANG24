@@ -29,6 +29,10 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 	static int currentComponentOffset = 0;
 	static int currentLocalOffset = 0;
 	static long currentMaxArg = 0;
+	
+	private static int actualSize(SemType typ){
+		return 0;	
+	}
 
 	private static int calcSize(SemType typ){
 		int total = 0;
@@ -73,16 +77,6 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 	public Integer visit(AstNodes<? extends AstNode> nodes, Integer arg){
 		int total = 0;
 		for(AstNode node : nodes){
-			/*if(node instanceof AstStmt){
-				node.accept(this, arg);
-				continue;
-			}
-			if(node instanceof AstExpr){
-				node.accept(this, arg);
-				continue;
-			}*/
-			
-
 			Integer res = node.accept(this, arg);
 			if(res != null)
 				total += res;
@@ -211,7 +205,6 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 
 	@Override
 	public Integer visit(AstAtomExpr atom, Integer arg){
-		System.out.println("atomexpor");
 		if(atom.type == AstAtomExpr.Type.STR){
 			MemLabel label = new MemLabel();
 			MemAbsAccess mem = new MemAbsAccess(atom.value.length() - 1, label,atom.value);
