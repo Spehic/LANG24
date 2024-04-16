@@ -105,8 +105,8 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 	public Integer visit(AstFunDefn funDefn, Integer arg){
 		
 		long localSize = 0;
-		currentParamOffset = 0;
-		currentLocalOffset = -8;
+		currentParamOffset = 8;
+		currentLocalOffset = 0;
 
 		currDepth += 1;
 		if (funDefn.pars != null)

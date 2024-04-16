@@ -14,6 +14,7 @@ import lang24.data.ast.visitor.*;
 import lang24.data.imc.code.*;
 import lang24.data.imc.code.expr.*;
 import lang24.data.imc.code.stmt.*;
+import lang24.data.type.*;
 
 import java.util.Stack;
 import java.util.Vector;
@@ -53,9 +54,21 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 	
 	@Override
 	public ImcInstr visit(AstNameExpr expr, Integer arg){
-		AstVarDefn def = (AstVarDefn) SemAn.definedAt.get(expr);			
-		MemAccess mem = Memory.varAccesses.get(def);
+		AstDefn def = SemAn.definedAt.get(expr);			
+		
+		MemAccess mem = null;
+		if( def instanceof AstVarDefn)
+			mem = Memory.varAccesses.get((AstVarDefn)def);
 	
+		if( def instanceof AstFunDefn.AstValParDefn)
+			mem = Memory.parAccesses.get((AstFunDefn.AstValParDefn)def);
+
+		if( def instanceof AstFunDefn.AstRefParDefn)
+			mem = Memory.parAccesses.get((AstFunDefn.AstRefParDefn)def);
+
+		if(mem == null)
+			throw new Report.InternalError();
+
 		if(mem instanceof MemAbsAccess){
 			MemAbsAccess actMem = (MemAbsAccess) mem;	
 			ImcNAME name = new ImcNAME(actMem.label);
@@ -71,8 +84,6 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 			long staticDistance = lastFnc.depth - relMem.depth + 1 ;
 
 			ImcTEMP tmp = new ImcTEMP(lastFnc.FP);
-			
-			//System.out.println(staticDistance + " " + expr.name);
 
 			ImcMEM mems = null; 
 			for(long i = 0; i < staticDistance ; i++){
@@ -121,6 +132,30 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		
 
 		return null;
+	}
+
+	//TODO : CALCULATE OFFSETS
+	@Override
+	public ImcInstr visit(AstCallExpr call, Integer arg){
+		AstFunDefn def = (AstFunDefn) SemAn.definedAt.get(call);		
+		MemFrame frame = Memory.frames.get(def);
+
+		Vector<Long> offsets = new Vector<Long>();
+		Vector<ImcExpr> args = new Vector<ImcExpr>();
+
+		long offset = 0;
+		if(call.args != null){
+			for(AstExpr expr : call.args){
+				offsets.add(offset);
+				args.add((ImcExpr) expr.accept(this, arg));
+				//TODO
+				offset += 0;
+			}
+		}
+
+		ImcCALL res = new ImcCALL(frame.label, offsets, args);
+		ImcGen.exprImc.put(call, res);
+		return res;
 	}
 	//Expressions
 	
@@ -211,7 +246,52 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		return mem;
 	}
 
+
+	@Override
+	public ImcInstr visit(AstCastExpr cast, Integer arg){
+		SemType typ = SemAn.isType.get(cast.type);
+		SemType actual = typ.actualType();
+		
+		ImcInstr castExpr = cast.expr.accept(this, arg);
+
+		if(actual instanceof SemCharType){
+			ImcCONST by = new ImcCONST(256);
+			ImcBINOP bin = new ImcBINOP(ImcBINOP.Oper.MOD, (ImcExpr)castExpr, by);
+			ImcGen.exprImc.put(cast, bin);
+			return bin;
+		}
+		else{
+			ImcGen.exprImc.put(cast, (ImcExpr)castExpr);
+			return castExpr;
+		}
+	}
+
+	@Override
+	public ImcInstr visit(AstSizeofExpr sizeExpr, Integer arg){
+		long size = 0;
+		
+		ImcCONST res = new ImcCONST(size);
+
+		ImcGen.exprImc.put(sizeExpr, res);
+		return res;
+	}
+
 	//Statements
+	
+	@Override
+	public ImcInstr visit(AstBlockStmt stm, Integer arg){
+		Vector<ImcStmt> vec = new Vector<ImcStmt>();
+		if(stm.stmts != null){
+			for(AstStmt statement : stm.stmts){
+				ImcStmt res = (ImcStmt) statement.accept(this, arg);
+				vec.add(res);
+			}
+		}
+
+		ImcSTMTS res = new ImcSTMTS(vec);
+		ImcGen.stmtImc.put(stm, res);
+		return res;
+	}
 	
 	@Override
 	public ImcInstr visit(AstAssignStmt stm, Integer arg){
@@ -304,6 +384,11 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		ImcSTMTS res = new ImcSTMTS(vec);
 		ImcGen.stmtImc.put(ret, res);
 		return res;
+	}
+
+	@Override
+	public ImcInstr visit(AstExprStmt stm, Integer arg){
+		return new ImcESTMT((ImcExpr) stm.expr.accept(this, arg));
 	}
 
 

@@ -1,10 +1,16 @@
 a:int
+g:[100]int
+bs:int
+gh:char
 
-f():int = {
-	a = 12 + a;
-	while a < 4: a = a + 1;
-	if a < 4 then a = 2; else a = 3;
+f(a:int, b:int):int = {
 	return 210;
+	gh = <char> 123;
+	return g[12*4];
+	return f(bs+12+12, a);
+	return <int>'a';
+	return sizeof(int);
+	return b;
 }
 
 

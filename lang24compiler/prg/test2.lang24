@@ -1,0 +1,28 @@
+wrap = { element : int }
+wrap_same = { elemt : int }
+list = { next : ^list }
+
+table : [2] char
+global_str : ^char
+
+# Some recursive types
+tip = tip2
+tip2 = ^tip
+pint = ^int
+self = ^self
+
+main() : int = {
+    table[0] = 'a';
+    table[1] = '\00';
+    global_str = "Hello, world!\n";
+    local_str = "Hello, local\n";
+    printf(global_str);
+    printf(local_str);
+    main();
+
+    return 0;
+}
+{
+    local_str : ^char
+    printf(str: ^char) : void
+}
