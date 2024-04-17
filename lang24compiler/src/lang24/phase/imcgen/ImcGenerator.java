@@ -27,6 +27,84 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 	public ImcGenerator() {
 	}
 
+	private static int nonPadded(SemType typ){
+		int total = 0;
+		if( typ instanceof SemIntType)
+			return 8;
+		if( typ instanceof SemPointerType)
+			return 8;
+		if( typ instanceof SemBoolType)
+			return 1;
+		if( typ instanceof SemCharType)
+			return 1;
+		if( typ instanceof SemVoidType)
+			return 0;
+		if( typ instanceof SemNameType){
+			SemNameType name = (SemNameType) typ;
+			return nonPadded(name.type());
+		}
+		if( typ instanceof SemArrayType){
+			SemArrayType arr = (SemArrayType) typ;
+			return (int )arr.size * nonPadded(arr.elemType);
+		}
+		if (typ instanceof SemStructType){
+			SemStructType str = (SemStructType) typ;
+			for( SemType a : str.cmpTypes )
+				total += calcSize(a);
+			return total;
+		}
+		if (typ instanceof SemUnionType){
+			SemUnionType uni = (SemUnionType) typ;
+			for( SemType a : uni.cmpTypes ){
+				int x = calcSize(a);
+				if( x > total)
+					total = x;
+			}
+			return total;
+		}
+
+		throw new Report.InternalError();
+	}
+
+	private static int calcSize(SemType typ){
+		int total = 0;
+		if( typ instanceof SemIntType)
+			return 8;
+		if( typ instanceof SemPointerType)
+			return 8;
+		if( typ instanceof SemBoolType)
+			return 8;
+		if( typ instanceof SemCharType)
+			return 8;
+		if( typ instanceof SemVoidType)
+			return 0;
+		if( typ instanceof SemNameType){
+			SemNameType name = (SemNameType) typ;
+			return calcSize(name.type());
+		}
+		if( typ instanceof SemArrayType){
+			SemArrayType arr = (SemArrayType) typ;
+			return (int )arr.size * nonPadded(arr.elemType);
+		}
+		if (typ instanceof SemStructType){
+			SemStructType str = (SemStructType) typ;
+			for( SemType a : str.cmpTypes )
+				total += calcSize(a);
+			return total;
+		}
+		if (typ instanceof SemUnionType){
+			SemUnionType uni = (SemUnionType) typ;
+			for( SemType a : uni.cmpTypes ){
+				int x = calcSize(a);
+				if( x > total)
+					total = x;
+			}
+			return total;
+		}
+
+		throw new Report.InternalError();
+	}
+
 	@Override
 	public ImcInstr visit(AstFunDefn funDefn, Integer arg){
 		MemFrame frame = Memory.frames.get(funDefn);
@@ -55,6 +133,7 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 	@Override
 	public ImcInstr visit(AstNameExpr expr, Integer arg){
 		AstDefn def = SemAn.definedAt.get(expr);			
+		boolean isRef = false;
 		
 		MemAccess mem = null;
 		if( def instanceof AstVarDefn)
@@ -63,8 +142,10 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		if( def instanceof AstFunDefn.AstValParDefn)
 			mem = Memory.parAccesses.get((AstFunDefn.AstValParDefn)def);
 
-		if( def instanceof AstFunDefn.AstRefParDefn)
+		if( def instanceof AstFunDefn.AstRefParDefn){
 			mem = Memory.parAccesses.get((AstFunDefn.AstRefParDefn)def);
+			isRef = true;
+		}
 
 		if(mem == null)
 			throw new Report.InternalError();
@@ -74,6 +155,8 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 			ImcNAME name = new ImcNAME(actMem.label);
 			ImcMEM newMem = new ImcMEM(name);
 			ImcGen.exprImc.put(expr, newMem);
+			if(isRef)
+				newMem = new ImcMEM(newMem);
 			return newMem;
 
 		}
@@ -100,10 +183,12 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 				bin = new ImcBINOP(ImcBINOP.Oper.ADD, mems, off);
 			else
 				bin = new ImcBINOP(ImcBINOP.Oper.ADD, tmp, off);
-
-			
-
+	
 			ImcMEM res = new ImcMEM(bin);
+
+			if(isRef)
+				res = new ImcMEM(res);
+
 			ImcGen.exprImc.put(expr, res);
 			return res;
 		}
@@ -111,30 +196,32 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		throw new Report.InternalError();
 	}
 
-	//TODO calclate sizeof when mulitplying
 	@Override
 	public ImcInstr visit(AstArrExpr arr, Integer arg){
 		ImcMEM mem = (ImcMEM) arr.arr.accept(this, arg);
 		ImcExpr id = (ImcExpr) arr.idx.accept(this, arg);
 
 		ImcExpr addr = mem.addr;
-		ImcBINOP mul = new ImcBINOP(ImcBINOP.Oper.MUL, id, new ImcCONST(0));
+		
+		SemArrayType typ = (SemArrayType) SemAn.ofType.get(arr.arr);
+		int size = calcSize(typ.elemType);
+		ImcBINOP mul = new ImcBINOP(ImcBINOP.Oper.MUL, id, new ImcCONST(size));
 
 		ImcBINOP bin = new ImcBINOP(ImcBINOP.Oper.ADD, addr, mul);
 		ImcGen.exprImc.put(arr, bin);
 
 		return bin;
 	}
-
+	
+	//TODO CMPEXPR
 	@Override
 	public ImcInstr visit(AstCmpExpr cmp, Integer arg){
 		ImcInstr res = cmp.expr.accept(this, arg);
 		
 
-		return null;
+		return res;
 	}
 
-	//TODO : CALCULATE OFFSETS
 	@Override
 	public ImcInstr visit(AstCallExpr call, Integer arg){
 		AstFunDefn def = (AstFunDefn) SemAn.definedAt.get(call);		
@@ -148,8 +235,9 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 			for(AstExpr expr : call.args){
 				offsets.add(offset);
 				args.add((ImcExpr) expr.accept(this, arg));
-				//TODO
-				offset += 0;
+				SemType typ = SemAn.ofType.get(expr);
+				int size = calcSize(typ);
+				offset += size;
 			}
 		}
 
@@ -181,9 +269,11 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 			case AstAtomExpr.Type.PTR -> {
 				imc = new ImcCONST(0);
 			}
-			//TODO: not correct yet
 			case AstAtomExpr.Type.STR -> {
-				imc = new ImcCONST(0);
+				MemAbsAccess acc = Memory.strings.get(expr);
+				ImcNAME name = new ImcNAME(acc.label);
+				ImcGen.exprImc.put(expr, name);
+				return name;
 			}
 		}
 

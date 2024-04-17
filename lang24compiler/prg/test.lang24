@@ -1,16 +1,16 @@
+time = (a:int, g:bool)
 a:int
 g:[100]int
+t:[100]char
+z:[100]time
 bs:int
-gh:char
+gh:^char
 
-f(a:int, b:int):int = {
+f(a:int, ^b:int):int = {
 	return 210;
-	gh = <char> 123;
-	return g[12*4];
-	return f(bs+12+12, a);
-	return <int>'a';
-	return sizeof(int);
 	return b;
+	f(12*4, b);
+	gh = "Hello, world";
 }
 
 

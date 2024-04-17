@@ -2,6 +2,7 @@ package lang24.phase.memory;
 
 import java.util.*;
 
+import lang24.common.report.*;
 import lang24.data.ast.tree.*;
 import lang24.data.ast.tree.defn.*;
 import lang24.data.ast.tree.expr.*;
@@ -30,8 +31,44 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 	static int currentLocalOffset = 0;
 	static long currentMaxArg = 0;
 	
-	private static int actualSize(SemType typ){
-		return 0;	
+	
+	private static int nonPadded(SemType typ){
+		int total = 0;
+		if( typ instanceof SemIntType)
+			return 8;
+		if( typ instanceof SemPointerType)
+			return 8;
+		if( typ instanceof SemBoolType)
+			return 1;
+		if( typ instanceof SemCharType)
+			return 1;
+		if( typ instanceof SemVoidType)
+			return 0;
+		if( typ instanceof SemNameType){
+			SemNameType name = (SemNameType) typ;
+			return nonPadded(name.type());
+		}
+		if( typ instanceof SemArrayType){
+			SemArrayType arr = (SemArrayType) typ;
+			return (int )arr.size * nonPadded(arr.elemType);
+		}
+		if (typ instanceof SemStructType){
+			SemStructType str = (SemStructType) typ;
+			for( SemType a : str.cmpTypes )
+				total += calcSize(a);
+			return total;
+		}
+		if (typ instanceof SemUnionType){
+			SemUnionType uni = (SemUnionType) typ;
+			for( SemType a : uni.cmpTypes ){
+				int x = calcSize(a);
+				if( x > total)
+					total = x;
+			}
+			return total;
+		}
+
+		throw new Report.InternalError();
 	}
 
 	private static int calcSize(SemType typ){
@@ -52,7 +89,7 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 		}
 		if( typ instanceof SemArrayType){
 			SemArrayType arr = (SemArrayType) typ;
-			return (int )arr.size * calcSize(arr.elemType);
+			return (int )arr.size * nonPadded(arr.elemType);
 		}
 		if (typ instanceof SemStructType){
 			SemStructType str = (SemStructType) typ;
@@ -70,7 +107,7 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 			return total;
 		}
 
-		return -1;
+		throw new Report.InternalError();
 	}
 
 	@Override
