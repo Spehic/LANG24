@@ -169,9 +169,10 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		ImcBINOP mul = new ImcBINOP(ImcBINOP.Oper.MUL, id, new ImcCONST(size));
 
 		ImcBINOP bin = new ImcBINOP(ImcBINOP.Oper.ADD, addr, mul);
-		ImcGen.exprImc.put(arr, bin);
-
-		return bin;
+		
+		ImcMEM res = new ImcMEM(bin);
+		ImcGen.exprImc.put(arr, res);
+		return res;
 	}
 	
 	@Override
@@ -274,7 +275,24 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 					imc = new ImcCONST(0);		
 			}
 			case AstAtomExpr.Type.CHAR -> {
-				imc = new ImcCONST(Character.valueOf(expr.value.charAt(1)));
+				String str = expr.value;
+				long value = 0;
+				String sub = str.substring(1, str.length() - 1);
+				if(sub.length() == 1){
+					value = Character.valueOf(sub.charAt(0));
+				}
+				if(sub.length() == 2){
+					if(sub.charAt(1) == 'n')
+						value = 10;
+					else
+						value = Character.valueOf(sub.charAt(1));
+				}
+				else if (sub.length() == 3){
+					String subsub = sub.substring(1, sub.length());
+					value = Long.parseLong(subsub, 16);
+				}
+
+				imc = new ImcCONST(value);
 			}
 			case AstAtomExpr.Type.INT -> {
 				imc = new ImcCONST(Long.parseLong(expr.value));
@@ -311,8 +329,9 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 				ImcGen.exprImc.put(pfxExpr, imc);
 				return imc;
 			case AstPfxExpr.Oper.PTR:
-				ImcGen.exprImc.put(pfxExpr, res);
-				return res;
+				ImcMEM meme = (ImcMEM) res;
+				ImcGen.exprImc.put(pfxExpr, meme.addr);
+				return meme.addr;
 		}
 
 		throw new Report.InternalError();
@@ -428,7 +447,8 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		vec.add(statement);
 		
 		vec.add(new ImcJUMP(end));
-		
+	
+		vec.add(new ImcLABEL(second));
 		if(stm.elseStmt != null){
 			ImcStmt elseStatement = (ImcStmt) stm.elseStmt.accept(this, arg);
 			vec.add(elseStatement);

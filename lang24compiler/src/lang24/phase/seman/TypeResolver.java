@@ -470,6 +470,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 	public SemType visit(AstCallExpr call, Integer arg){
 		AstFunDefn def = (AstFunDefn) SemAn.definedAt.get(call);
 		SemType resType = SemAn.ofType.get(def);
+		//System.out.println(resType);
 
 		int callSize = 0;
 		int defSize = 0;

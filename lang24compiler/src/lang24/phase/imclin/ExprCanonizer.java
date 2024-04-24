@@ -16,7 +16,14 @@ public class ExprCanonizer implements ImcVisitor<ImcExpr, Vector <ImcStmt>>{
 	public  ImcExpr visit(ImcBINOP bin, Vector<ImcStmt> stmts){
 		ImcExpr first = bin.fstExpr.accept(this, stmts);
 		ImcExpr second = bin.sndExpr.accept(this, stmts);
-		ImcBINOP res = new ImcBINOP(bin.oper, first, second); 
+
+		MemTemp firstTemp = new MemTemp();
+		stmts.add(new ImcMOVE( new ImcTEMP(firstTemp), first));
+
+		MemTemp secondTemp = new MemTemp();
+		stmts.add(new ImcMOVE( new ImcTEMP(secondTemp), second));
+
+		ImcBINOP res = new ImcBINOP(bin.oper, new ImcTEMP(firstTemp), new ImcTEMP(secondTemp)); 
 		return res;
 	}
 
@@ -59,7 +66,7 @@ public class ExprCanonizer implements ImcVisitor<ImcExpr, Vector <ImcStmt>>{
 
 	@Override
 	public ImcExpr visit(ImcUNOP unop, Vector<ImcStmt> stmts){
-		ImcExpr subExpr = unop.accept(this, stmts);
+		ImcExpr subExpr = unop.subExpr.accept(this, stmts);
 		return new ImcUNOP(unop.oper, subExpr);
 	}
 	

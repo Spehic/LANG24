@@ -1,4 +1,14 @@
-x:int
-fun():int = {
-	x = 2;
+main():int = {
+	return f3();
+}{
+
+	f3():int = {
+		return f2();
+	}{
+		a:int
+	}
+	
+	f2():int = return 2;
+	
 }
+

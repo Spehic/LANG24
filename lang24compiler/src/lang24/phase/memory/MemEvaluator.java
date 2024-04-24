@@ -206,7 +206,7 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 	public Integer visit(AstAtomExpr atom, Integer arg){
 		if(atom.type == AstAtomExpr.Type.STR){
 			MemLabel label = new MemLabel();
-			MemAbsAccess mem = new MemAbsAccess(atom.value.length() - 1, label,atom.value);
+			MemAbsAccess mem = new MemAbsAccess((atom.value.length() - 1) * 8, label,atom.value);
 			Memory.strings.put(atom, mem);
 		}
 

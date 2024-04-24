@@ -6,32 +6,211 @@
       }
     </style>
 <body>
-<table><tr><td bgcolor="DDDDDD" style="text-align:left"><nobr>
-	DATA
-	label=_x
-	size=8</nobr></td></tr></table>
-<table><tr><td bgcolor="DDDDDD"><table>
+<table></table>
+<table><tr>
+<td bgcolor="DDDDDD"><table>
 <tr><td bgcolor="EECF00"><table width="100%"><tr><td><nobr>
-	  label=<font style="font-family:courier new">_fun</font>
+	  label=<font style="font-family:courier new">_main</font>
 	  depth=0 
 	  size=16 
 	  locs=0
 	  args=0
-    	  FP=T0
-	  RV=T1</nobr></td></tr></table></td></tr>
+    	  FP=T4
+	  RV=T5</nobr></td></tr></table></td></tr>
 <tr><td bgcolor="EECF00"><nobr>
-	    prologue=<font style="font-family:courier new">_fun</font>
+	    prologue=<font style="font-family:courier new">_main</font>
 	    body=<font style="font-family:courier new">L2</font>
 	    epilogue=<font style="font-family:courier new">L3</font></nobr></td></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;LABEL(L2)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+<tr></tr>
 <tr><td><table width="100%">
 <tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
 <tr>
 <td><table width="100%">
-<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MEM&nbsp;</td></tr>
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T6)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T4)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
 <tr><td><table width="100%">
-<tr><td bgcolor="C7C232" colspan="1000">&nbsp;NAME(_x)&nbsp;</td></tr>
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T7)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;CALL(L0)&nbsp;</td></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T6)&nbsp;</td></tr>
 <tr></tr>
 </table></td></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T5)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T7)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;JUMP(L3)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T5)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;CONST(0)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;JUMP(L3)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+<tr></tr>
+</table></td>
+<td bgcolor="DDDDDD"><table>
+<tr><td bgcolor="EECF00"><table width="100%"><tr><td><nobr>
+	  label=<font style="font-family:courier new">L0</font>
+	  depth=1 
+	  size=24 
+	  locs=8
+	  args=0
+    	  FP=T0
+	  RV=T1</nobr></td></tr></table></td></tr>
+<tr><td bgcolor="EECF00"><nobr>
+	    prologue=<font style="font-family:courier new">L0</font>
+	    body=<font style="font-family:courier new">L4</font>
+	    epilogue=<font style="font-family:courier new">L5</font></nobr></td></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;LABEL(L4)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T8)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MEM&nbsp;</td></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T0)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T9)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;CALL(L1)&nbsp;</td></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T8)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T1)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T9)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;JUMP(L5)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T1)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;CONST(0)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;JUMP(L5)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+<tr></tr>
+</table></td>
+<td bgcolor="DDDDDD"><table>
+<tr><td bgcolor="EECF00"><table width="100%"><tr><td><nobr>
+	  label=<font style="font-family:courier new">L1</font>
+	  depth=1 
+	  size=16 
+	  locs=0
+	  args=0
+    	  FP=T2
+	  RV=T3</nobr></td></tr></table></td></tr>
+<tr><td bgcolor="EECF00"><nobr>
+	    prologue=<font style="font-family:courier new">L1</font>
+	    body=<font style="font-family:courier new">L6</font>
+	    epilogue=<font style="font-family:courier new">L7</font></nobr></td></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;LABEL(L6)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T10)&nbsp;</td></tr>
+<tr></tr>
 </table></td>
 <td><table width="100%">
 <tr><td bgcolor="C7C232" colspan="1000">&nbsp;CONST(2)&nbsp;</td></tr>
@@ -40,6 +219,45 @@
 </tr>
 </table></td></tr>
 <tr></tr>
-</table></td></tr></table>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T3)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T10)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;JUMP(L7)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;MOVE&nbsp;</td></tr>
+<tr>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;TEMP(T3)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+<td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;CONST(0)&nbsp;</td></tr>
+<tr></tr>
+</table></td>
+</tr>
+</table></td></tr>
+<tr></tr>
+<tr><td><table width="100%">
+<tr><td bgcolor="C7C232" colspan="1000">&nbsp;JUMP(L7)&nbsp;</td></tr>
+<tr></tr>
+</table></td></tr>
+<tr></tr>
+</table></td>
+</tr></table>
 </body>
 </html>
