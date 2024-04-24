@@ -9,7 +9,7 @@ gh:^char
 f(a:int, ^b:int):int = {
 	return 210;
 	return b;
-	f(12*4, b);
+	f(12*4, a);
 	gh = "Hello, world";
 }
 

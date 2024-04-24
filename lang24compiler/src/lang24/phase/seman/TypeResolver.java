@@ -16,7 +16,7 @@ import lang24.data.type.*;
 public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 	//map that holds namespaces for different record types (each record type introduces a new namespace -> SymbolTable)
-	final static private HashMap<SemType, SymbTable> recMap = new HashMap<SemType, SymbTable>();
+	final static public HashMap<SemType, SymbTable> recMap = new HashMap<SemType, SymbTable>();
 	//stack used for checking type of return statements
 	final static private Stack<SemType> lastFnc = new Stack<SemType>();
 
@@ -537,8 +537,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		SemType typ = cmp.expr.accept(this, arg);
 		SemType actual = typ.actualType();
 		SymbTable symb = recMap.get(actual);
-		
-		
+
 		AstRecType.AstCmpDefn node = null;
 
 		try{

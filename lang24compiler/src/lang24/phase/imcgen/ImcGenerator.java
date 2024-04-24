@@ -27,45 +27,6 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 	public ImcGenerator() {
 	}
 
-	private static int nonPadded(SemType typ){
-		int total = 0;
-		if( typ instanceof SemIntType)
-			return 8;
-		if( typ instanceof SemPointerType)
-			return 8;
-		if( typ instanceof SemBoolType)
-			return 1;
-		if( typ instanceof SemCharType)
-			return 1;
-		if( typ instanceof SemVoidType)
-			return 0;
-		if( typ instanceof SemNameType){
-			SemNameType name = (SemNameType) typ;
-			return nonPadded(name.type());
-		}
-		if( typ instanceof SemArrayType){
-			SemArrayType arr = (SemArrayType) typ;
-			return (int )arr.size * nonPadded(arr.elemType);
-		}
-		if (typ instanceof SemStructType){
-			SemStructType str = (SemStructType) typ;
-			for( SemType a : str.cmpTypes )
-				total += calcSize(a);
-			return total;
-		}
-		if (typ instanceof SemUnionType){
-			SemUnionType uni = (SemUnionType) typ;
-			for( SemType a : uni.cmpTypes ){
-				int x = calcSize(a);
-				if( x > total)
-					total = x;
-			}
-			return total;
-		}
-
-		throw new Report.InternalError();
-	}
-
 	private static int calcSize(SemType typ){
 		int total = 0;
 		if( typ instanceof SemIntType)
@@ -84,7 +45,7 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		}
 		if( typ instanceof SemArrayType){
 			SemArrayType arr = (SemArrayType) typ;
-			return (int )arr.size * nonPadded(arr.elemType);
+			return (int )arr.size * calcSize(arr.elemType);
 		}
 		if (typ instanceof SemStructType){
 			SemStructType str = (SemStructType) typ;
@@ -213,15 +174,33 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		return bin;
 	}
 	
-	//TODO CMPEXPR
 	@Override
 	public ImcInstr visit(AstCmpExpr cmp, Integer arg){
-		ImcInstr res = cmp.expr.accept(this, arg);
+		ImcExpr res = (ImcExpr) cmp.expr.accept(this, arg);
+		SemType actual = SemAn.ofType.get(cmp.expr).actualType();
+		SymbTable symb = TypeResolver.recMap.get(actual);
 		
+		AstRecType.AstCmpDefn node = null;
+		try{
+			node = (AstRecType.AstCmpDefn) symb.fnd(cmp.name);
+		}catch(SymbTable.CannotFndNameException e){
+			System.out.println("Cannot find component - internal error");
+			System.exit(1);
+		}
 
-		return res;
+		MemRelAccess mem = (MemRelAccess) Memory.cmpAccesses.get(node);
+
+		ImcCONST off = new ImcCONST(mem.offset);	
+		ImcMEM newMem = (ImcMEM) res;
+		ImcBINOP bin = new ImcBINOP(ImcBINOP.Oper.ADD, newMem.addr, off);
+		ImcMEM finRes = new ImcMEM(bin); 
+
+		ImcGen.exprImc.put(cmp, finRes);
+
+		return finRes;
 	}
 
+	//TODO add mem?
 	@Override
 	public ImcInstr visit(AstCallExpr call, Integer arg){
 		AstFunDefn def = (AstFunDefn) SemAn.definedAt.get(call);		
@@ -232,12 +211,23 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 
 		long offset = 0;
 		if(call.args != null){
+			int index = 0;
 			for(AstExpr expr : call.args){
 				offsets.add(offset);
-				args.add((ImcExpr) expr.accept(this, arg));
 				SemType typ = SemAn.ofType.get(expr);
 				int size = calcSize(typ);
 				offset += size;
+				
+				ImcExpr argEx = (ImcExpr) expr.accept(this, arg);
+
+				AstFunDefn.AstParDefn parDefn = def.pars.get(index);
+				if(parDefn instanceof AstFunDefn.AstRefParDefn){
+					ImcMEM tmp = (ImcMEM) argEx;
+					argEx = tmp.addr;
+				}
+				
+				args.add(argEx);
+				index++;
 			}
 		}
 
@@ -359,6 +349,8 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 	@Override
 	public ImcInstr visit(AstSizeofExpr sizeExpr, Integer arg){
 		long size = 0;
+		SemType typ = SemAn.isType.get(sizeExpr.type).actualType();
+		size = calcSize(typ);
 		
 		ImcCONST res = new ImcCONST(size);
 

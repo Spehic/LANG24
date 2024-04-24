@@ -32,45 +32,6 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 	static long currentMaxArg = 0;
 	
 	
-	private static int nonPadded(SemType typ){
-		int total = 0;
-		if( typ instanceof SemIntType)
-			return 8;
-		if( typ instanceof SemPointerType)
-			return 8;
-		if( typ instanceof SemBoolType)
-			return 1;
-		if( typ instanceof SemCharType)
-			return 1;
-		if( typ instanceof SemVoidType)
-			return 0;
-		if( typ instanceof SemNameType){
-			SemNameType name = (SemNameType) typ;
-			return nonPadded(name.type());
-		}
-		if( typ instanceof SemArrayType){
-			SemArrayType arr = (SemArrayType) typ;
-			return (int )arr.size * nonPadded(arr.elemType);
-		}
-		if (typ instanceof SemStructType){
-			SemStructType str = (SemStructType) typ;
-			for( SemType a : str.cmpTypes )
-				total += calcSize(a);
-			return total;
-		}
-		if (typ instanceof SemUnionType){
-			SemUnionType uni = (SemUnionType) typ;
-			for( SemType a : uni.cmpTypes ){
-				int x = calcSize(a);
-				if( x > total)
-					total = x;
-			}
-			return total;
-		}
-
-		throw new Report.InternalError();
-	}
-
 	private static int calcSize(SemType typ){
 		int total = 0;
 		if( typ instanceof SemIntType)
@@ -89,7 +50,7 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 		}
 		if( typ instanceof SemArrayType){
 			SemArrayType arr = (SemArrayType) typ;
-			return (int )arr.size * nonPadded(arr.elemType);
+			return (int )arr.size * calcSize(arr.elemType);
 		}
 		if (typ instanceof SemStructType){
 			SemStructType str = (SemStructType) typ;
@@ -124,6 +85,7 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 
 	@Override
 	public Integer visit(AstVarDefn var, Integer arg){
+		var.type.accept(this, arg);
 		int size = calcSize(SemAn.ofType.get(var));
 		MemLabel label = new MemLabel(var.name);
 		if( currDepth == 0) {
@@ -131,8 +93,8 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 			Memory.varAccesses.put(var, mem);
 			return size;
 		} else {
-			MemRelAccess mem = new MemRelAccess(size, currentLocalOffset, currDepth);
 			currentLocalOffset -= size;
+			MemRelAccess mem = new MemRelAccess(size, currentLocalOffset, currDepth);
 			Memory.varAccesses.put(var, mem);
 			return size;
 		}	
@@ -155,7 +117,7 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 		currentMaxArg = 0;
 		if(funDefn.stmt != null)
 			funDefn.stmt.accept(this, arg);
-	
+
 		if(currentMaxArg > 0)
 			currentMaxArg += 8;
 		currDepth -= 1;
@@ -163,12 +125,11 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 		long totalSize = localSize + 8 + currentMaxArg;
 
 		MemLabel label = null;
-		if( currDepth == 0)
+		if( currDepth == 0 || funDefn.stmt == null)
 			label = new MemLabel(funDefn.name);
 		else
 			label = new MemLabel();
 
-		//ce je klic z argumenti potrebujem static link
 			
 		totalSize = localSize + 8 + 8 + currentMaxArg;
 		MemFrame frame = new MemFrame(label, (long)currDepth, localSize, currentMaxArg, totalSize);
@@ -226,6 +187,7 @@ public class MemEvaluator implements AstFullVisitor<Integer, Integer>{
 	public Integer visit(AstRecType.AstCmpDefn cmp, Integer arg){
 		int size = calcSize(SemAn.ofType.get(cmp));
 		
+		cmp.type.accept(this, arg);
 		//struct type
 		if( arg == 0 ){
 			MemRelAccess mem = new MemRelAccess(size, currentComponentOffset, -1);
