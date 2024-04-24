@@ -465,7 +465,7 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 		return null;
 	}
 
-//TODO check if call call is defined as function
+//TODO check if call is defined as function
 	@Override
 	public SemType visit(AstCallExpr call, Integer arg){
 		AstFunDefn def = (AstFunDefn) SemAn.definedAt.get(call);
@@ -576,6 +576,19 @@ public class TypeResolver implements AstFullVisitor<SemType, Integer> {
 
 
 	//Statements
+	
+	@Override
+	public SemType visit(AstExprStmt stmt, Integer arg){
+		SemType res = stmt.expr.accept(this, arg);
+		if(!( equiv(res, SemVoidType.type) )){
+			System.out.println("Statement must be of void type: "  + stmt.location());
+			System.exit(1);
+		}
+
+		SemAn.ofType.put(stmt, SemVoidType.type);
+		return SemVoidType.type;
+	}
+
 	@Override
 	public SemType visit(AstAssignStmt stmt, Integer arg){
 		SemType expr1 = stmt.dst.accept(this, arg);

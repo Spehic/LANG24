@@ -12,6 +12,7 @@ public class ImcCONST extends ImcExpr {
 
 	/** The value. */
 	public final long value;
+
 	/**
 	 * Constructs a new constant.
 	 * 

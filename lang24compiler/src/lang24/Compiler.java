@@ -11,6 +11,7 @@ import lang24.phase.abstr.*;
 import lang24.phase.seman.*;
 import lang24.phase.memory.*;
 import lang24.phase.imcgen.*;
+import lang24.phase.imclin.*;
 
 /**
  * The LANG'24 compiler.
@@ -26,7 +27,7 @@ public class Compiler {
 
 	/** All valid phases name of the compiler. */
 	private static final Vector<String> phaseNames = new Vector<String>(
-			Arrays.asList("none", "all", "lexan", "synan", "abstr", "seman", "memory", "imcgen"));
+			Arrays.asList("none", "all", "lexan", "synan", "abstr", "seman", "memory", "imcgen", "imclin"));
 
 	/** Names of command line options. */
 	private static final HashSet<String> cmdLineOptNames = new HashSet<String>(
@@ -194,7 +195,20 @@ public class Compiler {
 					logger.addSubvisitor(new ImcLogger(imcGen.logger));
 					Abstr.tree.accept(logger, "AstDefn");
 				}
-				if (cmdLineOptValues.get("--target-phase").equals("memory"))
+				if (cmdLineOptValues.get("--target-phase").equals("imcgen"))
+					break;
+
+				// Linearization of intermediate code.
+				try (ImcLin imclin = new ImcLin()) {
+					Abstr.tree.accept(new ChunkGenerator(), null);
+					imclin.log();
+
+					if (false) {
+						Interpreter interpreter = new Interpreter(ImcLin.dataChunks(), ImcLin.codeChunks());
+						System.out.println("EXIT CODE: " + interpreter.run("_main"));
+					}
+				}
+				if (cmdLineOptValues.get("--target-phase").equals("imclin"))
 					break;
 
 				break;

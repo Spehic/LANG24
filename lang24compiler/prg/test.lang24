@@ -1,16 +1,4 @@
-time = (a:int, g:bool)
-a:int
-g:[100]int
-t:[100]char
-z:[100]time
-bs:int
-gh:^char
-
-f(a:int, ^b:int):int = {
-	return 210;
-	return b;
-	f(12*4, a);
-	gh = "Hello, world";
+x:int
+fun():int = {
+	x = 2;
 }
-
-

@@ -209,8 +209,30 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		Vector<Long> offsets = new Vector<Long>();
 		Vector<ImcExpr> args = new Vector<ImcExpr>();
 
+		//add static link
 		long offset = 0;
+		ImcExpr slTmp = null;
+		MemFrame last = lastFncFrame.peek();
+		if( last.depth < frame.depth){
+			slTmp = new ImcTEMP(last.FP);
+		}
+		else if( last.depth == frame.depth ){
+			slTmp = new ImcMEM(new ImcTEMP(last.FP));
+		}else{
+			slTmp = new ImcMEM(new ImcTEMP(last.FP));
+			long diff = last.depth - frame.depth;
+			for(int i = 0; i < diff; i++){
+				ImcMEM tempo = (ImcMEM) slTmp;
+				slTmp = new ImcMEM(tempo.addr);
+			}
+		}
+					
+		offsets.add(0l);
+		args.add(slTmp);
+		offset += 8;
+
 		if(call.args != null){
+			//needed to get astnodes index
 			int index = 0;
 			for(AstExpr expr : call.args){
 				offsets.add(offset);
@@ -232,6 +254,7 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 		}
 
 		ImcCALL res = new ImcCALL(frame.label, offsets, args);
+
 		ImcGen.exprImc.put(call, res);
 		return res;
 	}
@@ -470,7 +493,10 @@ public class ImcGenerator implements AstFullVisitor<ImcInstr, Integer> {
 
 	@Override
 	public ImcInstr visit(AstExprStmt stm, Integer arg){
-		return new ImcESTMT((ImcExpr) stm.expr.accept(this, arg));
+		ImcESTMT exp = new ImcESTMT((ImcExpr) stm.expr.accept(this, arg));
+		ImcGen.stmtImc.put(stm, exp);
+
+		return exp;
 	}
 
 
