@@ -1,14 +1,17 @@
+x:int
+
 main():int = {
-	return f3();
+	a = 3;
+	return f1(a);
 }{
+	a:int
 
-	f3():int = {
-		return f2();
+	f1(a:int):int = {
+		return f2(a) + 1;
 	}{
-		a:int
+		f2(b:int):int = return f4() + 1;
+		f3(b:int):int = return b + 1;
 	}
-	
-	f2():int = return 2;
-	
-}
 
+	f4():int = return 1;
+}

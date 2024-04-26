@@ -18,7 +18,6 @@ main() : int = {
     local_str = "Hello, local\n";
     printf(global_str);
     printf(local_str);
-    main();
 
     return 0;
 }
