@@ -1,17 +1,30 @@
-x:int
+putint(i:int):void
+putchar(c:char):void
 
 main():int = {
-	a = 3;
-	return f1(a);
+	arr[0] = 1;
+	arr[1] = 2;
+	arr[2] = 3;
+	arr[3] = 4;
+	arr[4] = 5;
+	return f(4, arr);
 }{
-	a:int
+	arr:[10]int
+}
 
-	f1(a:int):int = {
-		return f2(a) + 1;
-	}{
-		f2(b:int):int = return f4() + 1;
-		f3(b:int):int = return b + 1;
+f(a:int, b:[10]int):int = {
+	res = 0;
+	i = 0;
+
+	while ( i <= a):{
+		res = res + i;
+		putint(b[i]);
+		putchar('\n');
+		i = i + 1;
 	}
 
-	f4():int = return 1;
+	return res;
+}{
+	res:int
+	i:int
 }
