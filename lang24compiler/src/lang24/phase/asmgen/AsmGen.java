@@ -25,7 +25,7 @@ public class AsmGen extends Phase {
 			Vector<AsmInstr> instr = new Vector<AsmInstr>();
 
 			for(ImcStmt statement : codeChunk.stmts()){
-				instr.addAll(MaximalMunch.munchStmt(statement));
+				instr.addAll(statement.accept(new StatementGen(), null));
 			}
 
 			Code code = new Code(codeChunk.frame, codeChunk.entryLabel, codeChunk.exitLabel, instr);
