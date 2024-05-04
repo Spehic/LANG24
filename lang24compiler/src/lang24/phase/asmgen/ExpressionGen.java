@@ -14,7 +14,7 @@ import lang24.common.report.*;
 
 public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
     
-    //TODO: fix MOD
+    //TODO: fix MOD and some others
     @Override
     public MemTemp visit(ImcBINOP bin, Vector<AsmInstr> instrs){
         MemTemp temporary = new MemTemp();
@@ -55,9 +55,40 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
         return temporary;
     }
 
+    // TODO: ADD arbitrary distance away from stack pointer
     @Override
     public MemTemp visit(ImcCALL call, Vector<AsmInstr> instrs){
         MemTemp temporary = new MemTemp();
+
+        String fullInstr = null;
+        for( int i = 0; i < call.args.size(); i++){
+            MemTemp argRes = call.args.get(i).accept(this, instrs);
+            
+            Vector<MemTemp> uses = new Vector<MemTemp>();
+            uses.add(argRes);
+
+            fullInstr = "STO $254,`s0,"+ call.offs.get(i);
+            AsmOPER oper = new AsmOPER(fullInstr, uses, null, null);
+            instrs.add(oper);
+        }
+
+        // call function
+        // $8 here is a magic number
+        fullInstr = "PUSHJ $8," + call.label.name;
+
+        Vector<MemLabel> jmps = new Vector<MemLabel >();
+        jmps.add(call.label);
+
+        AsmOPER oper = new AsmOPER(fullInstr, null, null, jmps);
+        instrs.add(oper);
+
+        // save return value
+        fullInstr = "LDO `d0,$254,0";
+        Vector<MemTemp> defs = new Vector<MemTemp>();
+        defs.add(temporary);
+
+        oper = new AsmOPER(fullInstr, null, defs, null);
+        instrs.add(oper);
 
         return temporary;
     }
@@ -67,6 +98,40 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
         MemTemp temporary = new MemTemp();
 
         Vector<MemTemp> defs = new Vector<MemTemp>();
+        defs.add(temporary);
+
+        long lo = imconst.value & 0xFFFF;
+        long ml = imconst.value >> 16 & 0xFFFF;
+        long mh = imconst.value >> 32 & 0xFFFF;
+        long hi = imconst.value >> 48 & 0xFFFF;
+
+        System.out.println(imconst.value);
+        System.out.println(lo);
+        System.out.println(ml);
+        System.out.println(mh);
+        System.out.println(hi);
+        String fullInstr = "SETL `d0," + lo;
+        AsmOPER oper = new AsmOPER(fullInstr, null, defs, null);
+        instrs.add(oper);
+
+        if( ml != 0 ) {
+            fullInstr = "INCML `d0," + ml;
+            oper = new AsmOPER(fullInstr, null, defs, null);
+            instrs.add(oper);
+        }
+
+        if( mh != 0 ) {
+            fullInstr = "INCMH `d0," + mh;
+            oper = new AsmOPER(fullInstr, null, defs, null);
+            instrs.add(oper);
+        }
+
+        if( mh != 0 ) {
+            fullInstr = "INCH `d0," + hi;
+            oper = new AsmOPER(fullInstr, null, defs, null);
+            instrs.add(oper);
+        }
+
         return temporary;
     }
 
@@ -95,7 +160,7 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
         Vector<MemTemp> defs = new Vector<MemTemp>();
         defs.add( temporary );
 
-        String fullInstr = " LDA d0," + name.label;
+        String fullInstr = " LDA d0," + name.label.name;
         AsmOPER oper = new AsmOPER(fullInstr, null, defs, null);
         instrs.add(oper);
 

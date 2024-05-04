@@ -52,7 +52,7 @@ public class StatementGen implements ImcVisitor<Vector<AsmInstr>, Object>{
 	public Vector<AsmInstr> visit(ImcESTMT estm, Object arg){	
 		Vector<AsmInstr> res = new Vector<AsmInstr>();
 
-		estm.accept( new ExpressionGen(), res);
+		estm.expr.accept( new ExpressionGen(), res);
 
 		return res;
 	}
