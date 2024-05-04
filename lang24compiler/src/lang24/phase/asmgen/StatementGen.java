@@ -34,7 +34,7 @@ public class StatementGen implements ImcVisitor<Vector<AsmInstr>, Object>{
 	public Vector<AsmInstr> visit(ImcCJUMP cjmp, Object arg){
 		Vector<AsmInstr> res = new Vector<AsmInstr>();
 
-		String mnemonic = "BNZ  s0," + cjmp.posLabel.name;
+		String mnemonic = "BNZ  `s0," + cjmp.posLabel.name;
 
 		Vector<MemTemp> uses = new Vector<MemTemp>();
 		uses.add( cjmp.cond.accept( new ExpressionGen(), res ));
@@ -73,7 +73,7 @@ public class StatementGen implements ImcVisitor<Vector<AsmInstr>, Object>{
 
 		String mnemonic = null;
 		if( mov.dst instanceof ImcMEM ){
-			mnemonic = "STO  s0,s1,0";
+			mnemonic = "STO  `s0,`s1,0";
 
 			Vector<MemTemp> uses = new Vector<MemTemp>();
 			uses.add( mov.src.accept( new ExpressionGen(), res));
@@ -86,7 +86,7 @@ public class StatementGen implements ImcVisitor<Vector<AsmInstr>, Object>{
 		}
 
 		if( mov.dst instanceof ImcTEMP ){
-			mnemonic = "ADD d0,s0,0";
+			mnemonic = "ADD `d0,`s0,0";
 
 			Vector<MemTemp> uses = new Vector<MemTemp>();
 			uses.add( mov.src.accept( new ExpressionGen(), res));
@@ -94,7 +94,7 @@ public class StatementGen implements ImcVisitor<Vector<AsmInstr>, Object>{
 			Vector<MemTemp> defs = new Vector<MemTemp>();
 			defs.add( mov.dst.accept( new ExpressionGen(), res) );
 			
-			AsmOPER oper = new AsmOPER(mnemonic, uses, defs, null);
+			AsmMOVE oper = new AsmMOVE(mnemonic, uses, defs);
 			res.add(oper);
 			return res;
 		}
