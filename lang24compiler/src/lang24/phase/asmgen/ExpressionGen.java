@@ -1,4 +1,3 @@
-
 package lang24.phase.asmgen;
 
 import java.util.*;
@@ -13,8 +12,7 @@ import lang24.data.asm.*;
 import lang24.common.report.*;
 
 public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
-    
-    //TODO: fix MOD and some others
+
     @Override
     public MemTemp visit(ImcBINOP bin, Vector<AsmInstr> instrs){
         MemTemp temporary = new MemTemp();
@@ -29,29 +27,54 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
         Vector<MemTemp> defs = new Vector<MemTemp>();
         defs.add(temporary);
 
-        String mnemonic = null;
-
         switch (bin.oper) {
-            case ImcBINOP.Oper.OR -> mnemonic = "OR";
-            case ImcBINOP.Oper.AND -> mnemonic = "AND";
-            case ImcBINOP.Oper.EQU -> mnemonic = "EQU";
-            case ImcBINOP.Oper.NEQ -> mnemonic = "NEQ";
-            case ImcBINOP.Oper.LTH -> mnemonic = "LTH";
-            case ImcBINOP.Oper.GTH -> mnemonic = "GTH";
-            case ImcBINOP.Oper.LEQ -> mnemonic = "LEQ";
-            case ImcBINOP.Oper.GEQ -> mnemonic = "GEQ";
-            case ImcBINOP.Oper.ADD -> mnemonic = "ADD";
-            case ImcBINOP.Oper.SUB -> mnemonic = "SUB";
-            case ImcBINOP.Oper.MUL -> mnemonic = "MUL";
-            case ImcBINOP.Oper.DIV -> mnemonic = "DIV";
-            case ImcBINOP.Oper.MOD -> mnemonic = "MOD";                
+            //CONDITIONS 
+            case ImcBINOP.Oper.EQU -> {
+                instrs.add(new AsmOPER("CMP `d0,`s0,`s1", uses, defs, null)); 
+                instrs.add(new AsmOPER("ZSZ `d0,`s0,1", defs, defs, null));
+            }
+            case ImcBINOP.Oper.NEQ -> {
+                instrs.add(new AsmOPER("CMP `d0,`s0,`s1", uses, defs, null)); 
+                instrs.add(new AsmOPER("ZSNZ `d0,`s0,1", defs, defs, null));
+            }
+            case LTH -> { 
+                instrs.add(new AsmOPER("CMP `d0,`s0,`s1", uses, defs, null)); 
+                instrs.add(new AsmOPER("ZSN `d0,`s0,1", defs, defs, null));
+            }
+            case LEQ -> { 
+                instrs.add(new AsmOPER("CMP `d0,`s0,`s1", uses, defs, null)); 
+                instrs.add(new AsmOPER("ZSNP `d0,`s0,1", defs, defs, null));
+            }
+            case GTH -> { 
+                instrs.add(new AsmOPER("CMP `d0,`s0,`s1", uses, defs, null)); 
+                instrs.add(new AsmOPER("ZSP `d0,`s0,1", defs, defs, null));
+            }
+            case GEQ -> { 
+                instrs.add(new AsmOPER("CMP `d0,`s0,`s1", uses, defs, null)); 
+                instrs.add(new AsmOPER("ZSNN `d0,`s0,1", defs, defs, null));
+            }
+            
+            //ARITHMETHIC
+            case ImcBINOP.Oper.ADD -> 
+                instrs.add(new AsmOPER("ADD `d0,`s0,`s1", uses, defs, null));
+            case ImcBINOP.Oper.SUB -> 
+                instrs.add(new AsmOPER("SUB `d0,`s0,`s1", uses, defs, null)); 
+            case ImcBINOP.Oper.MUL -> 
+                instrs.add(new AsmOPER("MUL `d0,`s0,`s1", uses, defs, null)); 
+            case ImcBINOP.Oper.DIV -> 
+                instrs.add(new AsmOPER("DIV `d0,`s0,`s1", uses, defs, null)); 
+            case ImcBINOP.Oper.MOD -> { 
+                    instrs.add(new AsmOPER("DIV `d0,`s0,`s1", uses, defs, null)); 
+                    instrs.add(new AsmOPER("GET `d0,rR", null, defs, null));
+                }
+            
+            case ImcBINOP.Oper.OR -> 
+                instrs.add(new AsmOPER("OR `d0,`s0,`s1", uses, defs, null)); 
+            case ImcBINOP.Oper.AND ->
+                instrs.add(new AsmOPER("AND `d0,`s0,`s1", uses, defs, null));               
             default -> throw new Report.InternalError();
         }
 
-        String fullInstr = mnemonic + " " + "`d0,`s0,`s0";
-
-        AsmOPER oper = new AsmOPER(fullInstr, uses, defs, null);
-        instrs.add(oper);
         return temporary;
     }
 
@@ -67,7 +90,13 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
             Vector<MemTemp> uses = new Vector<MemTemp>();
             uses.add(argRes);
 
-            fullInstr = "STO $254,`s0,"+ call.offs.get(i);
+            long offset = call.offs.get(i);
+            if( offset <= 0xFF)
+                fullInstr = "STO $254,`s0,"+ offset;
+            else{
+                uses.add( new ImcCONST(offset).accept(this, instrs) );
+                fullInstr = "STO $254,`s0,`s1";
+            }
             AsmOPER oper = new AsmOPER(fullInstr, uses, null, null);
             instrs.add(oper);
         }
@@ -105,11 +134,6 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
         long mh = imconst.value >> 32 & 0xFFFF;
         long hi = imconst.value >> 48 & 0xFFFF;
 
-        System.out.println(imconst.value);
-        System.out.println(lo);
-        System.out.println(ml);
-        System.out.println(mh);
-        System.out.println(hi);
         String fullInstr = "SETL `d0," + lo;
         AsmOPER oper = new AsmOPER(fullInstr, null, defs, null);
         instrs.add(oper);
@@ -152,7 +176,6 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
         return temporary;
 	}
 
-    //TODO
     @Override
     public MemTemp visit(ImcNAME name, Vector<AsmInstr> instrs){
         MemTemp temporary = new MemTemp();
@@ -186,7 +209,10 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
         
         switch(unop.oper) {
             case ImcUNOP.Oper.NEG -> fullInstr = "NEG `d0,`s0";
-            case ImcUNOP.Oper.NOT -> fullInstr = "XOR `d0,`s0,1";
+            case ImcUNOP.Oper.NOT -> {
+                uses.add( new ImcCONST(-1).accept(this, instrs) );
+                fullInstr = "XOR `d0,`s0,`s1";
+            }
             default -> throw new Report.InternalError();
         }
 
