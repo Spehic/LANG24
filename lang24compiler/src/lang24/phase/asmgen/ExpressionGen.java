@@ -183,7 +183,7 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
         Vector<MemTemp> defs = new Vector<MemTemp>();
         defs.add( temporary );
 
-        String fullInstr = " LDA d0," + name.label.name;
+        String fullInstr = " LDA `d0," + name.label.name;
         AsmOPER oper = new AsmOPER(fullInstr, null, defs, null);
         instrs.add(oper);
 
