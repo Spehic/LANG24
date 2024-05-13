@@ -36,13 +36,13 @@ public class LiveAn extends Phase {
 			
 		}
 
-		for( AsmInstr i : successors){ 
-			System.out.println("scuc-----");
-			System.out.println(i);
-			System.out.println( i.jumps());
-			System.out.println("scuc-----");
+		// for( AsmInstr i : successors){ 
+		// 	System.out.println("scuc-----");
+		// 	System.out.println(i);
+		// 	System.out.println( i.jumps());
+		// 	System.out.println("scuc-----");
 
-		}
+		// }
 		return successors;
 	}
 
@@ -88,18 +88,18 @@ public class LiveAn extends Phase {
 		}
 
 
-		HashSet<MemTemp> currOut = new HashSet<MemTemp>();
-		HashSet<MemTemp> currIn = new HashSet<MemTemp>();
+		HashSet<MemTemp> currOut = null;
+		HashSet<MemTemp> currIn = null;
 
 		while(true){
 			Vector<AsmInstr> instructions = code.instrs;
 			
 			boolean hasChanged = false;
 			for(int i = 0; i < instructions.size(); i++){
-				AsmOPER oper = (AsmOPER) instructions.get(i);	
+				AsmInstr oper =  instructions.get(i);	
 
-				currOut = oper.out();
-				currIn = oper.in();
+				currOut = new HashSet<MemTemp>(oper.out());
+				currIn = new HashSet<MemTemp>(oper.in());
 				
 				oper.addInTemps( in( oper ) );
 

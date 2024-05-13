@@ -1,1 +1,1 @@
-main(i:int) :int = if(i == 1) then return 2; else return 3;
+main(i:int) :int = if(i == 1) then return 2; else return i;
