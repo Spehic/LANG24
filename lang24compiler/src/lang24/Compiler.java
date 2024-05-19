@@ -13,6 +13,7 @@ import lang24.phase.memory.*;
 import lang24.phase.imcgen.*;
 import lang24.phase.imclin.*;
 import lang24.phase.asmgen.*;
+import lang24.phase.livean.*;
 
 /**
  * The LANG'24 compiler.
@@ -27,8 +28,8 @@ public class Compiler {
 	}
 
 	/** All valid phases name of the compiler. */
-	private static final Vector<String> phaseNames = new Vector<String>(
-			Arrays.asList("none", "all", "lexan", "synan", "abstr", "seman", "memory", "imcgen", "imclin", "asmgen"));
+	private static final Vector<String> phaseNames = new Vector<String>(Arrays.asList("none", "all", "lexan", "synan",
+			"abstr", "seman", "memory", "imcgen", "imclin", "asmgen", "livean"));
 
 	/** Names of command line options. */
 	private static final HashSet<String> cmdLineOptNames = new HashSet<String>(
@@ -218,6 +219,15 @@ public class Compiler {
 					asmgen.log();
 				}
 				if (cmdLineOptValues.get("--target-phase").equals("amsgen"))
+					break;
+
+				// Liveness analysis.
+				try (LiveAn livean = new LiveAn()){
+					livean.analysis();
+					livean.log();
+				}
+				
+				if (cmdLineOptValues.get("--target-phase").equals("livean"))
 					break;
 
 				break;
