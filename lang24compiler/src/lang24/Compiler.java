@@ -27,13 +27,16 @@ public class Compiler {
 		throw new Report.InternalError();
 	}
 
+	/** Amount of registers of the proccesor **/
+	public static int numOfRegs = 4;
+
 	/** All valid phases name of the compiler. */
 	private static final Vector<String> phaseNames = new Vector<String>(Arrays.asList("none", "all", "lexan", "synan",
-			"abstr", "seman", "memory", "imcgen", "imclin", "asmgen", "livean"));
+			"abstr", "seman", "memory", "imcgen", "imclin", "asmgen", "livean", "regall"));
 
 	/** Names of command line options. */
 	private static final HashSet<String> cmdLineOptNames = new HashSet<String>(
-			Arrays.asList("--src-file-name", "--dst-file-name", "--target-phase", "--logged-phase", "--xml", "--xsl"));
+			Arrays.asList("--src-file-name", "--dst-file-name", "--target-phase", "--logged-phase", "--xml", "--xsl", "--num-regs"));
 
 	/** Values of command line options indexed by their command line option name. */
 	private static final HashMap<String, String> cmdLineOptValues = new HashMap<String, String>();
@@ -79,6 +82,7 @@ public class Compiler {
 						}
 
 						cmdLineOptValues.put(cmdLineOptName, cmdLineOptValue);
+
 					} else {
 						// Repeated specification of a command line option.
 						Report.warning("Command line option '" + opts[optc] + "' ignored.");
@@ -205,7 +209,7 @@ public class Compiler {
 					Abstr.tree.accept(new ChunkGenerator(), null);
 					imclin.log();
 
-					if (false) {
+					if (true) {
 						Interpreter interpreter = new Interpreter(ImcLin.dataChunks(), ImcLin.codeChunks());
 						System.out.println("EXIT CODE: " + interpreter.run("_main"));
 					}
@@ -222,13 +226,16 @@ public class Compiler {
 					break;
 
 				// Liveness analysis.
-				try (LiveAn livean = new LiveAn()){
+				try (LiveAn livean = new LiveAn()) {
 					livean.analysis();
 					livean.log();
 				}
 				
 				if (cmdLineOptValues.get("--target-phase").equals("livean"))
 					break;
+
+				// Register allocation.
+				// By now you should know how to add another phase here ;-)
 
 				break;
 			}
