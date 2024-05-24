@@ -4,5 +4,3 @@ main(i:int) :int = {
 	a:int
 } 
 
-
-putint(a:int):void

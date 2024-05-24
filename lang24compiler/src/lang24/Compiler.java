@@ -142,7 +142,6 @@ public class Compiler {
 			else{
 				Integer regs = Integer.valueOf(cmdLineOptValues.get("--num-regs"));
 				numOfRegs = regs;
-				System.out.println(regs);
 			}
 
 			// Carry out the compilation phase by phase.

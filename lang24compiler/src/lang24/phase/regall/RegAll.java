@@ -13,16 +13,28 @@ import lang24.phase.asmgen.*;
 public class RegAll extends Phase {
 
 	/** Mapping of temporary variables to registers. */
-	public final HashMap<MemTemp, Integer> tempToReg = new HashMap<MemTemp, Integer>();
+	public static final HashMap<MemTemp, Integer> tempToReg = new HashMap<MemTemp, Integer>();
 
 	public RegAll() {
 		super("regall");
 	}
 
 	private void allocateFnc (Code code){
+		//build
 		Graph graph = new Graph();
 		graph.build( code.instrs );
+		graph.fp = code.frame.FP;
+		System.out.println("---build---");
 		System.out.println( graph );
+
+		//simplfy
+		graph.simplfy( );
+		System.out.println("---simplfy---");
+		System.out.println( graph );
+		graph.printStack();
+
+		//select
+		graph.select();
 	}
 
 	public void allocate() {

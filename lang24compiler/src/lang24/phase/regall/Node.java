@@ -9,18 +9,24 @@ public class Node {
 	int color;
 	MemTemp temp;
 	HashSet<Node> neighbors;
+	public boolean potSpill;
 
 	public Node( MemTemp temp ){
 		this.temp = temp;
 		this.neighbors = new HashSet<Node>();
 		this.color = -1;
-		//this.potSpill = false;
+		this.potSpill = false;
 	}
 
 	public void addNeighbor( Node node ){
 		if ( this == node ) return;
 		if ( this.neighbors.contains( node)) return;
 		neighbors.add( node );
+	}
+
+	public void removeNeighbor( Node node ){
+		if ( this == node ) return;
+		neighbors.remove( node );
 	}
 
 	public void addNeighbors( HashSet<Node> temps ){
@@ -52,7 +58,7 @@ public class Node {
 	public String toString(){
 		String ret = " ";
 		ret += this.temp.toString();
-
+		if( potSpill ) ret += " spill";
 		return ret;
 	}
 }
