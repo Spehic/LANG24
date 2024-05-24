@@ -1,8 +1,7 @@
 main(i:int) :int = {
-	a[19] = 222; 
-	a[22] = 222; 
+	i = a + i;
 }{
-	a:[100]int
+	a:int
 } 
 
 

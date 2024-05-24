@@ -14,6 +14,7 @@ import lang24.phase.imcgen.*;
 import lang24.phase.imclin.*;
 import lang24.phase.asmgen.*;
 import lang24.phase.livean.*;
+import lang24.phase.regall.*;
 
 /**
  * The LANG'24 compiler.
@@ -135,6 +136,14 @@ public class Compiler {
 				cmdLineOptValues.put("--target-phase", "all");
 			if (cmdLineOptValues.get("--logged-phase") == null)
 				cmdLineOptValues.put("--logged-phase", "none");
+			
+			if (cmdLineOptValues.get("--num-regs") == null)
+				numOfRegs = 32;
+			else{
+				Integer regs = Integer.valueOf(cmdLineOptValues.get("--num-regs"));
+				numOfRegs = regs;
+				System.out.println(regs);
+			}
 
 			// Carry out the compilation phase by phase.
 			while (true) {
@@ -235,7 +244,13 @@ public class Compiler {
 					break;
 
 				// Register allocation.
-				// By now you should know how to add another phase here ;-)
+				try (RegAll regall = new RegAll()) {
+					regall.allocate();
+					regall.log();
+				}
+				
+				if (cmdLineOptValues.get("--target-phase").equals("regall"))
+					break;
 
 				break;
 			}

@@ -19,8 +19,16 @@ public class RegAll extends Phase {
 		super("regall");
 	}
 
+	private void allocateFnc (Code code){
+		Graph graph = new Graph();
+		graph.build( code.instrs );
+		System.out.println( graph );
+	}
+
 	public void allocate() {
-		// TODO
+		for ( Code code : AsmGen.codes ) {
+			allocateFnc( code );	
+		}
 	}
 
 	public void log() {
