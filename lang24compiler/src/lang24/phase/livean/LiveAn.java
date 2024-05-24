@@ -1,3 +1,5 @@
+
+
 package lang24.phase.livean;
 
 import java.util.*;
@@ -88,32 +90,38 @@ public class LiveAn extends Phase {
 		}
 
 
-		HashSet<MemTemp> currOut = null;
+		HashSet<MemTemp> prevOut = null;
+		HashSet<MemTemp> prevIn = null;
 		HashSet<MemTemp> currIn = null;
-
-		while(true){
+		HashSet<MemTemp> currOut = null;
+		
+		while( true ){
 			Vector<AsmInstr> instructions = code.instrs;
 			
 			boolean hasChanged = false;
 			for(int i = 0; i < instructions.size(); i++){
 				AsmInstr oper =  instructions.get(i);	
 
-				currOut = new HashSet<MemTemp>(oper.out());
-				currIn = new HashSet<MemTemp>(oper.in());
+				prevOut = new HashSet<MemTemp>(oper.out());
+				prevIn = new HashSet<MemTemp>(oper.in());
 				
-				oper.addInTemps( in( oper ) );
+				currIn = in (oper);
 
 				HashSet<AsmInstr> succs = succ( instructions, i);
-				oper.addOutTemp( out(succs) );
+				currOut = out(succs);
 
-				if( !currOut.equals( oper.out()))
+				oper.addInTemps( currIn );
+				oper.addOutTemp( currOut );
+
+				if( !currOut.equals( prevOut ))
 					hasChanged = true;
-				if( !currIn.equals( oper.in()))
+				if( !currIn.equals( prevIn ))
 					hasChanged = true;
 			}
 
 			// if a loop didnt change anything break out
 			if( !hasChanged ) break; 
+
 		}
 	}
 
@@ -121,6 +129,8 @@ public class LiveAn extends Phase {
 	public void analysis() {
 		for( Code code: AsmGen.codes ){
 			fncResolve(code);
+			labels = new HashMap<String, AsmLABEL>();
+
 		}
 	}
 

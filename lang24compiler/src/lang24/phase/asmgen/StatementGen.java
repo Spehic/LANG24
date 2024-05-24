@@ -77,7 +77,7 @@ public class StatementGen implements ImcVisitor<Vector<AsmInstr>, Object>{
 
 			Vector<MemTemp> uses = new Vector<MemTemp>();
 			uses.add( mov.src.accept( new ExpressionGen(), res));
-			uses.add( mov.dst.accept( new ExpressionGen(), res) );
+			uses.add( ((ImcMEM)mov.dst).addr.accept( new ExpressionGen(), res) );
 			
 			AsmOPER oper = new AsmOPER(mnemonic, uses, null, null);
 			res.add(oper);
