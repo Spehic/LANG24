@@ -1,5 +1,9 @@
 main(i:int) :int = {
-	i = i + 2;
-	i = 12;
-	return i;
+	a[19] = 222; 
+	a[22] = 222; 
+}{
+	a:[100]int
 } 
+
+
+putint(a:int):void
