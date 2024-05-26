@@ -6,6 +6,7 @@ import lang24.data.mem.*;
 import lang24.data.asm.*;
 import lang24.phase.*;
 import lang24.phase.asmgen.*;
+import lang24.phase.livean.*;
 
 /**
  * Register allocation.
@@ -19,22 +20,36 @@ public class RegAll extends Phase {
 		super("regall");
 	}
 
-	private void allocateFnc (Code code){
-		//build
+	public static void allocateFnc (Code code) {
+		// build
 		Graph graph = new Graph();
 		graph.build( code.instrs );
+
+		// build graph used for select later
+		Graph selectGraph = new Graph();
+		selectGraph.build( code.instrs );
+
 		graph.fp = code.frame.FP;
-		System.out.println("---build---");
-		System.out.println( graph );
+		//System.out.println("---build---");
+		//System.out.println( graph );
+		//System.out.println("---build---");
+		//System.out.println( selectGraph );
+
+		//try { Thread.sleep( 2000 ); }
+		//catch (Exception e) {}
 
 		//simplfy
 		graph.simplfy( );
-		System.out.println("---simplfy---");
-		System.out.println( graph );
-		graph.printStack();
+		//System.out.println("---simplfy---");
+		//System.out.println( graph );
+		//graph.printStack();
 
 		//select
-		graph.select();
+		// used for altering code in case of spill
+		selectGraph.code = code;
+		//fp uses special register ($253 )
+		selectGraph.fp = code.frame.FP;
+		selectGraph.select( graph.stk );
 	}
 
 	public void allocate() {

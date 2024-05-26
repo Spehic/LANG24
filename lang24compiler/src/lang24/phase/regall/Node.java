@@ -6,7 +6,7 @@ import lang24.data.mem.*;
 import lang24.common.report.*;
 
 public class Node {
-	int color;
+	public int color;
 	MemTemp temp;
 	HashSet<Node> neighbors;
 	public boolean potSpill;
@@ -34,7 +34,7 @@ public class Node {
 		neighbors.remove( this );
 	}
 
-	public void color( int max ){
+	public boolean color( int max ){
 		for( int i = 0; i < max; i++ ){
 			boolean available = true;
 
@@ -47,11 +47,12 @@ public class Node {
 
 			if ( available ) {
 				this.color = i;
-				return;
+				return true;
 			}
 		}
 		
-		throw new Report.InternalError();
+		return false;
+		//throw new Report.InternalError();
 	}
 
 	@Override

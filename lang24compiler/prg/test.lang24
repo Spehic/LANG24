@@ -1,6 +1,5 @@
 main(i:int) :int = {
-	i = a + i;
-}{
-	a:int
-} 
+	i = 2;
+}
+
 

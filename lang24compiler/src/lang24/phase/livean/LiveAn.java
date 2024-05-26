@@ -123,6 +123,20 @@ public class LiveAn extends Phase {
 			if( !hasChanged ) break; 
 
 		}
+		/*System.out.println("--------in livean------");
+		for ( AsmInstr in : code.instrs) {
+			System.out.print( in + "\tout:");
+			for ( MemTemp t : in.out()) System.out.print(" " + t);
+
+			System.out.print("\tin:");
+			for ( MemTemp t : in.in()) System.out.print(" " + t);
+			
+			System.out.print("\tuses:");
+			for ( MemTemp t : in.uses()) System.out.print(" " + t);
+			System.out.println();
+		}
+			
+		System.out.println("--------in livean------");*/
 	}
 
 
