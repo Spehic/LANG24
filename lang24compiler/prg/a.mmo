@@ -1,0 +1,148 @@
+		GREG
+		GREG
+		GREG
+
+
+		LOC	Data_Segment
+		GREG	@
+buf	OCTA	0,0
+args	OCTA	buf,2
+
+
+		LOC	#100
+Main		SWYM
+		SETL	$254,0
+		INCML	$254,61440
+		INCMH	$254,32767
+		SETL	$252,0
+		INCML	$252,80
+		PUSHJ	$32,_main
+		LDO	$255,$254,0
+EXIT	TRAP	0,Halt,0
+
+
+#Prologue of: _main
+_main		SWYM
+		SETL	$0,65520
+		INCML	$0,65535
+		INCMH	$0,65535
+		INCH	$0,65535
+		SUB	$254,$254,$0
+		STO	$253,$254,0
+		SUB	$254,$254,8
+		GET	$253,rJ
+		STO	$253,$254,0
+		ADD	$254,$254,8
+		ADD	$254,$254,$0
+		OR	$253,$254,0
+		SETL	$1,40
+		SUB	$254,$254,$1
+		JMP	L0
+#Body of: _main
+L0		SWYM
+		ADD $1,$253,0
+		SETL $0,65528
+		INCML $0,65535
+		INCMH $0,65535
+		INCH $0,65535
+		ADD $2,$0,0
+		ADD $0,$1,$2
+		ADD $2,$0,0
+		SETL $0,0
+		ADD $1,$0,0
+		STO  $1,$2,0
+L2		SWYM
+		SETL $0,1
+		BNZ  $0,L3
+L7		SWYM
+		JMP L4
+L3		SWYM
+		LDO $0,$253,0
+		ADD $2,$0,0
+		ADD $1,$253,0
+		SETL $0,65528
+		INCML $0,65535
+		INCMH $0,65535
+		INCH $0,65535
+		ADD $3,$0,0
+		ADD $0,$1,$3
+		LDO $1,$0,0
+		ADD $0,$1,0
+		STO $254,$2,0
+		STO $254,$0,8
+		PUSHJ $32,_putChar
+		LDO $0,$254,0
+		ADD $1,$253,0
+		SETL $0,65528
+		INCML $0,65535
+		INCMH $0,65535
+		INCH $0,65535
+		ADD $2,$0,0
+		ADD $0,$1,$2
+		ADD $3,$0,0
+		ADD $2,$253,0
+		SETL $1,65528
+		INCML $1,65535
+		INCMH $1,65535
+		INCH $1,65535
+		ADD $0,$1,0
+		ADD $1,$2,$0
+		LDO $0,$1,0
+		ADD $2,$0,0
+		SETL $0,1
+		ADD $1,$0,0
+		ADD $0,$2,$1
+		ADD $1,$0,0
+		STO  $1,$3,0
+		JMP L2
+L4		SWYM
+		SETL $1,12
+		ADD $0,$1,0
+		ADD $1,$0,0
+		JMP L1
+		SETL $0,0
+		ADD $1,$0,0
+		JMP L1
+#Epilogue of: _main
+L1		SWYM
+		STO	$1,$253,0
+		ADD	$254,$253,0
+		SETL	$0,16
+		SUB	$0,$253,$0
+		SUB	$1,$0,8
+		LDO	$1,$1,0
+		PUT	rJ,$1
+		LDO	$253,$0,0
+		POP	0,0
+
+
+_getChar		SWYM
+		LDA	$255,args
+		TRAP	0,Fgets,StdIn
+		LDA	$0,buf
+		LDB	$0,$0,0
+		STO	$0,$254,0
+		POP	0,0
+
+
+_putChar		SWYM
+		LDO	$0,$254,8
+		LDA	$255,buf
+		STB	$0,$255,0
+		TRAP	0,Fputs,StdOut
+		POP	0,0
+
+
+_new		SWYM
+		LDO	$0,$254,8
+		STO	$252,$254,0
+		ADD	$252,$252,$0
+		POP	0,0
+
+
+_del	SWYM
+		POP	0,0
+
+
+_exit		SWYM
+		JMP	EXIT

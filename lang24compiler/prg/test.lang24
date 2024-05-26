@@ -1,5 +1,16 @@
 main(i:int) :int = {
 	i = 2;
+	a = "kosa\n";
+	g[1] = <char>3;
+	hello();
+
+}{
+	a:^char
 }
 
+g:[20]char
 
+
+hello():void = {
+	g[1] = 'a';
+}

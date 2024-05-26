@@ -15,6 +15,7 @@ import lang24.phase.imclin.*;
 import lang24.phase.asmgen.*;
 import lang24.phase.livean.*;
 import lang24.phase.regall.*;
+import lang24.phase.end.*;
 
 /**
  * The LANG'24 compiler.
@@ -217,7 +218,7 @@ public class Compiler {
 					Abstr.tree.accept(new ChunkGenerator(), null);
 					imclin.log();
 
-					if (true) {
+					if (false) {
 						Interpreter interpreter = new Interpreter(ImcLin.dataChunks(), ImcLin.codeChunks());
 						System.out.println("EXIT CODE: " + interpreter.run("_main"));
 					}
@@ -250,6 +251,10 @@ public class Compiler {
 				
 				if (cmdLineOptValues.get("--target-phase").equals("regall"))
 					break;
+			
+				//generate asm file
+				SourceGen src = new SourceGen(); 
+				src.createAsm();
 
 				break;
 			}

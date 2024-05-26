@@ -1,0 +1,14 @@
+main(i:int):int = {
+	i = 0;
+	while ( true ): {
+		putChar( i );
+		i = i + 1;
+	}
+
+	return 12;
+
+}{
+	i:int
+}
+
+putChar( a:int ):void

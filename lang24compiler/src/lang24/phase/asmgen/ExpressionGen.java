@@ -11,6 +11,8 @@ import lang24.data.mem.MemTemp;
 import lang24.data.asm.*;
 import lang24.common.report.*;
 
+import lang24.Compiler;
+
 public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
 
     @Override
@@ -103,7 +105,7 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
 
         // call function
         // $8 here is a magic number
-        fullInstr = "PUSHJ $8," + call.label.name;
+        fullInstr = "PUSHJ $" + Compiler.numOfRegs +"," + call.label.name;
 
         Vector<MemLabel> jmps = new Vector<MemLabel >();
         jmps.add(call.label);
@@ -183,7 +185,7 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
         Vector<MemTemp> defs = new Vector<MemTemp>();
         defs.add( temporary );
 
-        String fullInstr = " LDA `d0," + name.label.name;
+        String fullInstr = "LDA `d0," + name.label.name;
         AsmOPER oper = new AsmOPER(fullInstr, null, defs, null);
         instrs.add(oper);
 
