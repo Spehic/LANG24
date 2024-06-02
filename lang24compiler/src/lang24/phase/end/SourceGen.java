@@ -27,8 +27,8 @@ public class SourceGen{
 		//loads function code
 		stringVec.add("\n");
 		for ( Code code : AsmGen.codes ){
-			if (code.frame.label.name.equals("_getChar")) continue;
-			if (code.frame.label.name.equals("_putChar")) continue;
+			if (code.frame.label.name.equals("_getchar")) continue;
+			if (code.frame.label.name.equals("_putchar")) continue;
 			if (code.frame.label.name.equals("_new")) continue;
 			if (code.frame.label.name.equals("_del")) continue;
 			if (code.frame.label.name.equals("_exit")) continue;
@@ -112,8 +112,9 @@ public class SourceGen{
 		stringVec.add("#Prologue of: " + code.frame.label.name);
 		stringVec.add(code.frame.label.name + "\t\tSWYM");
 	
+		
 		long offset = code.frame.locsSize + 8;
-		loadConst( -offset, 0 );
+		loadConst( offset, 0 );
 
 		stringVec.add("\t\tSUB\t$254,$254,$0");	
 		stringVec.add("\t\tSTO\t$253,$254,0"); 	
@@ -180,7 +181,7 @@ public class SourceGen{
 	
 
 	private void addStdLib(){
-		stringVec.add("_getChar\t\tSWYM");
+		stringVec.add("_getchar\t\tSWYM");
 		stringVec.add("\t\tLDA\t$255,args");
 		stringVec.add("\t\tTRAP\t0,Fgets,StdIn");
 		stringVec.add("\t\tLDA\t$0,buf");
@@ -190,7 +191,7 @@ public class SourceGen{
 
 		stringVec.add("\n");
 
-		stringVec.add("_putChar\t\tSWYM");
+		stringVec.add("_putchar\t\tSWYM");
 		stringVec.add("\t\tLDO\t$0,$254,8");	
 		stringVec.add("\t\tLDA\t$255,buf");
 		stringVec.add("\t\tSTB\t$0,$255,0");

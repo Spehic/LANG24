@@ -1,4 +1,6 @@
-putint(i:int):void
+putint(i:int):void = {
+	putchar( <char> (i + 48) );
+}
 putchar(c:char):void
 
 seed:int

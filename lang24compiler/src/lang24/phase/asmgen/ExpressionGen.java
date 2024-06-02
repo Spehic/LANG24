@@ -94,10 +94,10 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
 
             long offset = call.offs.get(i);
             if( offset <= 0xFF)
-                fullInstr = "STO $254,`s0,"+ offset;
+                fullInstr = "STO `s0,$254,"+ offset;
             else{
                 uses.add( new ImcCONST(offset).accept(this, instrs) );
-                fullInstr = "STO $254,`s0,`s1";
+                fullInstr = "STO `s0,$254,`s1";
             }
             AsmOPER oper = new AsmOPER(fullInstr, uses, null, null);
             instrs.add(oper);
@@ -152,7 +152,7 @@ public class ExpressionGen implements ImcVisitor<MemTemp, Vector<AsmInstr>> {
             instrs.add(oper);
         }
 
-        if( mh != 0 ) {
+        if( hi != 0 ) {
             fullInstr = "INCH `d0," + hi;
             oper = new AsmOPER(fullInstr, null, defs, null);
             instrs.add(oper);

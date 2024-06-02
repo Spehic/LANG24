@@ -1,4 +1,26 @@
-putint(i:int):void
+putint(i:int):void = {
+	if i == 0 then {
+        	putchar('0');
+ 
+    	} else{
+		index = 0;
+		while i > 0 : {
+        		digits[index] = <char>((i % 10) + 48);
+        		i = i / 10;
+        		index = index + 1;
+    		}
+
+		while index > 0 : {
+        		index = index - 1;
+     	   		putchar(digits[index]);
+    		}
+	}
+
+}{
+	digits:[10]char
+	index:int
+}
+
 putchar(c:char):void
 
 seed:int
